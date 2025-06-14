@@ -31,36 +31,50 @@ $(document).ready(function(){
                                 @endif
                                 
                                
-            <div class="col-lg-4 col-md-12 wow fadeInUp ">
+            <div class="col-lg-4 col-md-6 col-sm-6 fadeInUp ">
                 <div class="listing-item effect-item">
 					<div class="photo image-effect">
                         <a href="{{ route('front_listing_detail',[$listing->id,$listing->listing_slug]) }}"
                                      title="{{ $listing->listing_name }}">
-                            @if($listing->canal == 'dsautoestoque')
-                                
-                                @if ($listing->listing_featured_photo == 'images/sem-veiculo.jpg')
-                <img src="{{ asset('images/sem-veiculo.jpg') }}" alt="{{ asset('images/sem-veiculo.jpg') }}"
-                                     title="{{ $listing->listing_name }}">
-            @else
-                @if ($listing->listing_image_alterada_admin == 1)
-                    <img src="{{ asset('uploads/listing_featured_photos/' . $listing->listing_featured_photo) }}" alt="{{ asset('uploads/listing_featured_photos/' . $listing->listing_featured_photo) }}"
-                                     title="{{ $listing->listing_name }}">
-                @else
-                    <img src="{{ $listing->listing_featured_photo }}" alt="{{ $listing->listing_featured_photo }}"
-                                     title="{{ $listing->listing_name }}">
-                @endif
-            @endif
-                            @else
-                                <img src="{{ asset('uploads/listing_featured_photos/'.$listing->listing_featured_photo) }}" alt="{{ asset('uploads/listing_featured_photos/'.$listing->listing_featured_photo) }}"
-                                     title="{{ $listing->listing_name }}">
-                            @endif
+                            
+                            @php
+                                $imgDestaque = '';
+
+                                if ($listing->canal === 'dsautoestoque') {
+                                    if ($listing->listing_featured_photo === 'images/sem-veiculo.jpg') {
+                                        $imgDestaque = asset('images/sem-veiculo.jpg');
+                                    } else {
+                                        if ($listing->listing_image_alterada_admin == 1) {
+                                            $imgDestaque = asset('uploads/listing_featured_photos_thumbs/thumb_' . $listing->listing_featured_photo);
+                                        } else {
+                                            $isFromDsae = strpos($listing->listing_featured_photo, 'dsae') !== false;
+
+                                            $imgDestaque = $isFromDsae
+                                                ? $listing->listing_featured_photo
+                                                : asset('uploads/listing_featured_photos_thumbs/thumb_' . $listing->listing_featured_photo);
+                                        }
+                                    }
+                                } else {
+                                    $imgDestaque = asset('uploads/listing_featured_photos_thumbs/thumb_' . $listing->listing_featured_photo);
+                                }
+                            @endphp
+
+                            <img 
+                                src="{{ $imgDestaque }}" 
+                                alt="{{ $listing->listing_featured_photo }}" 
+                                title="{{ $listing->listing_name }}" 
+                                width="255" 
+                                height="191">
+                            
+                            
+                            
                             
                         </a>
                         <div class="brand">
-                            <a style="border:1px solid #fff;" href="{{ route('front_listing_brand_detail',$listing->rListingBrand->listing_brand_slug) }}">{{ $listing->rListingBrand->listing_brand_name }}</a>
+                            <a style="border:1px solid #fff;" href="{{ route('front_listing_marca_detail',$listing->rListingBrand->listing_brand_slug) }}">{{ $listing->rListingBrand->listing_brand_name }}</a>
                         </div>
                         <div class="model">
-                            <a href="javascript:void(0);" style="border:1px solid #fff;">{{ $listing->vehicleModel }}</a>
+                            <a href="#" style="border:1px solid #fff;">{{ $listing->vehicleModel }}</a>
                         </div>
                                             <div class="cambio" style="position: absolute;
     top: 10px;
@@ -119,7 +133,7 @@ $(document).ready(function(){
                         </div>
 
                       <div class="btn-group" role="group" aria-label="Basic example" style="width:100%;">
-<a type="button" href="{{ route('front_listing_agent_detail',[$type,$listing->user_id]) }}" class="btn btn-dark btn-sm">ver loja</a>
+<a type="button" href="{{ route('front_listing_agent_detail',[$type,$listing->user->slug_user ?? $listing->user_id]) }}" class="btn btn-dark btn-sm">ver loja</a>
 <a type="button" href="{{ route('front_listing_detail',[$listing->id,$listing->listing_slug]) }}/#parcelas" class="btn btn-danger btn-sm">
     simular parcelas 
 </a>

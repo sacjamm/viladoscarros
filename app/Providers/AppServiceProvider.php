@@ -158,13 +158,15 @@ class AppServiceProvider extends ServiceProvider {
                 $item_row->generic_seo_meta_description = (!empty($item_row->address) ? $item_row->address : $item_row->name);
                 break;
             case 'front_listing_location_detail':
-                $main_url = Request::url();
+                $main_url = \Illuminate\Support\Facades\Request::url();
+                //$main_url = Request::url();
                 $slug = explode('veiculos/localizacao/', $main_url);
                 $item_row = \App\Models\ListingLocation::where('listing_location_slug', $slug[1])->first();
                 $item_row->generic_seo_meta_description = (!empty($item_row->seo_meta_description) ? $item_row->seo_meta_description : ($item_row->listing_location_name));
                 break;
             case 'front_listing_brand_detail':
-                $main_url = Request::url();
+                 $main_url = \Illuminate\Support\Facades\Request::url();
+                //$main_url = Request::url();
                 $slug = explode('veiculos/marcas/', $main_url);
                 $item_row = \App\Models\ListingBrand::where('listing_brand_slug', $slug[1])->first();
                 $item_row->generic_seo_meta_description = (!empty($item_row->seo_meta_description) ? $item_row->seo_meta_description : ($item_row->listing_brand_name));

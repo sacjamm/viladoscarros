@@ -50,23 +50,37 @@
                             <div class="listing-item effect-item">
                                 <div class="photo image-effect">
                                     <a href="{{ route('front_listing_detail',[$row->id,$row->listing_slug]) }}">
-@if($row->canal == 'dsautoestoque')
-                                
-                                @if ($row->listing_featured_photo == 'images/sem-veiculo.jpg')
-                <img src="{{ asset('images/sem-veiculo.jpg') }}" alt="">
-            @else
-                @if ($row->listing_image_alterada_admin == 1)
-                    <img src="{{ asset('uploads/listing_featured_photos/' . $row->listing_featured_photo) }}" alt="">
-                @else
-                    <img src="{{ $row->listing_featured_photo }}" alt="">
-                @endif
-            @endif
-                            @else
-                                <img src="{{ asset('uploads/listing_featured_photos/'.$row->listing_featured_photo) }}" alt="">
-                            @endif
+ @php
+                                $imgDestaque = '';
+
+                                if ($row->canal === 'dsautoestoque') {
+                                    if ($row->listing_featured_photo === 'images/sem-veiculo.jpg') {
+                                        $imgDestaque = asset('images/sem-veiculo.jpg');
+                                    } else {
+                                        if ($row->listing_image_alterada_admin == 1) {
+                                            $imgDestaque = asset('uploads/listing_featured_photos_thumbs/thumb_' . $row->listing_featured_photo);
+                                        } else {
+                                            $isFromDsae = strpos($row->listing_featured_photo, 'dsae') !== false;
+
+                                            $imgDestaque = $isFromDsae
+                                                ? $row->listing_featured_photo
+                                                : asset('uploads/listing_featured_photos_thumbs/thumb_' . $row->listing_featured_photo);
+                                        }
+                                    }
+                                } else {
+                                    $imgDestaque = asset('uploads/listing_featured_photos_thumbs/thumb_' . $row->listing_featured_photo);
+                                }
+                            @endphp
+
+                            <img 
+                                src="{{ $imgDestaque }}" 
+                                alt="{{ $row->listing_featured_photo }}" 
+                                title="{{ $row->listing_name }}" 
+                                width="255" 
+                                height="191">
 </a>
                                     <div class="brand">
-                                        <a href="{{ route('front_listing_brand_detail',$row->rListingBrand->listing_brand_slug) }}">{{ $row->rListingBrand->listing_brand_name }}</a>
+                                        <a href="{{ route('front_listing_marca_detail',$row->rListingBrand->listing_brand_slug) }}">{{ $row->rListingBrand->listing_brand_name }}</a>
                                     </div>
                                     <div class="model">
                             <a href="javascript:void(0);">{{ $row->vehicleModel }}</a>
@@ -244,9 +258,9 @@
                         </div>
 
                       <div class="btn-group" role="group" aria-label="Basic example" style="width:100%;">
-<a type="button" href="{{ route('front_listing_agent_detail',[$type,$row->user_id]) }}" class="btn btn-dark btn-sm">ver loja</a>
+<a type="button" href="{{ route('front_listing_agent_detail',[$type,$row->user->slug_user ?? $row->user_id]) }}" class="btn btn-dark btn-sm">ver loja</a>
 <a type="button" href="{{ route('front_listing_detail',[$row->id,$row->listing_slug]) }}/#parcelas" class="btn btn-danger btn-sm">
-    <img src="{{ asset('images/logo-itau.png') }}" style="width:18px;margin-right:3px;">parcelas
+    simular parcelas
 </a>
                       
                       </div>

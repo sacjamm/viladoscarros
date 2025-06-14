@@ -22,11 +22,14 @@
 				</div>
 			</div>
 			<div class="col-md-9">
-
+ @php $type = "user"; @endphp
 				@if($listing->isEmpty())
 				<span class="text-danger">{{ NO_RESULT_FOUND }}</span>
 				@else
 
+                                <a class="btn btn-primary btn-block mb-1" href="{{ route('front_listing_agent_detail',[$type,$user_data->id]) }}">
+                                            Meu estoque no shopping
+                                        </a>
 				<div class="table-responsive-md">
 					<table class="table table-bordered">
 						<thead>
@@ -53,11 +56,30 @@
 								<td>{{ $loop->iteration }}</td>
 								<td>
                                                                     
-                                                                    @if($row->canal === 'dsautoestoque')
-									<img src="{{ asset($row->listing_featured_photo) }}" alt="" class="w-100">
-                                                                        @else
-									<img src="{{ asset('uploads/listing_featured_photos/'.$row->listing_featured_photo) }}" alt="" class="w-100">
-                                                                        @endif
+                                                                    @php
+                                $imgDestaque = '';
+
+                                if ($row->canal === 'dsautoestoque') {
+                                    if ($row->listing_featured_photo === 'images/sem-veiculo.jpg') {
+                                        $imgDestaque = asset('images/sem-veiculo.jpg');
+                                    } else {
+                                        if ($row->listing_image_alterada_admin == 1) {
+                                            $imgDestaque = asset('uploads/listing_featured_photos_thumbs/thumb_' . $row->listing_featured_photo);
+                                        } else {
+                                            $isFromDsae = strpos($row->listing_featured_photo, 'dsae') !== false;
+
+                                            $imgDestaque = $isFromDsae
+                                                ? $row->listing_featured_photo
+                                                : asset('uploads/listing_featured_photos_thumbs/thumb_' . $row->listing_featured_photo);
+                                        }
+                                    }
+                                } else {
+                                    $imgDestaque = asset('uploads/listing_featured_photos_thumbs/thumb_' . $row->listing_featured_photo);
+                                }
+                            @endphp
+                                                                    
+									<img src="{{ $imgDestaque }}" alt="" class="w-100">
+                                                                    
                                                                    
 								</td>
 								<td>

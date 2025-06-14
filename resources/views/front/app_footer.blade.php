@@ -2,8 +2,6 @@
 $g_settings = \App\Models\GeneralSetting::where('id',1)->first();
 $social_media = \App\Models\SocialMediaItem::orderBy('social_order', 'asc')->get();
 
-
-
 $listing_brands = \App\Models\ListingBrand::whereIn('id', function($query) {
         $query->select('listing_brand_id')
               ->from('listings')
@@ -32,12 +30,12 @@ $page_about_item = \App\Models\PageAboutItem::where('id',1)->first();
                                 @break
                             @endif
 						    <li>
-                                <a href="{{ route('front_listing_brand_detail',$row->listing_brand_slug) }}" 
+                                <a href="{{ route('front_listing_marca_detail',$row->listing_brand_slug) }}" 
                                                                        title="{{ $row->listing_brand_name }}">{{ $row->listing_brand_name }}</a>
                             </li>
 						@endforeach
 					</ul>
-                                        <a href="{{ route('front_listing_brand_all') }}" class="btn btn-light btn-block" 
+                                        <a href="{{ route('front_listing_marcas_all') }}" class="btn btn-light btn-block btn-sm" 
                                                                        title="VER TODAS AS MARCAS">VER TODAS AS MARCAS</a>
 				</div>
 			</div>
@@ -57,7 +55,7 @@ $page_about_item = \App\Models\PageAboutItem::where('id',1)->first();
                                                     @endif
 						@endforeach
 					</ul>
-                                        <a href="{{ route('front_listing_location_all') }}" class="btn btn-light btn-block" 
+                                        <a href="{{ route('front_listing_location_all') }}" class="btn btn-light btn-block btn-sm" 
                                                                        title="VER TODAS AS CIDADES">VER TODAS AS CIDADES</a>
 				</div>
 			</div>

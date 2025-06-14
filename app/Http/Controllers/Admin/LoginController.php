@@ -7,7 +7,6 @@ use App\Mail\ResetPasswordMessageToAdmin;
 use App\Models\Admin;
 use App\Models\EmailTemplate;
 use Illuminate\Http\Request;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Hash;
 use Auth;
 use Illuminate\Support\Facades\Mail;
@@ -96,7 +95,7 @@ class LoginController extends Controller {
                     "Reply-To: " . env('MAIL_USERNAME') . "" . "\r\n" .
                     "X-Mailer: PHP/" . phpversion();
 
-            $mail = mail($request->email, $subject, $message, $headers);
+            mail($request->email, $subject, $message, $headers);
 
             Mail::to($request->email)->send(new ResetPasswordMessageToAdmin($subject, $message));
         }
@@ -129,7 +128,7 @@ class LoginController extends Controller {
         $data['password'] = Hash::make($request->new_password);
         $data['token'] = '';
 
-        $updt = Admin::where('token', $request->token)->where('email', $request->email)->update($data);
+        Admin::where('token', $request->token)->where('email', $request->email)->update($data);
 
         return redirect()->route('admin_login')->with('success', SUCCESS_RESET_PASSWORD);
     }

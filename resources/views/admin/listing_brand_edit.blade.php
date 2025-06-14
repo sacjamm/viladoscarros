@@ -31,18 +31,36 @@
         ->where('listing_status', 'Active')
         ->first();
 @endphp
-                        
-                        @if($brandListingAlisson && $brandListingAlisson->canal == 'dsautoestoque')
-                        <img src="{{ asset('images/'.$listing_brand->listing_brand_slug.'.jpg') }}" alt="" class="w_200">
-                        @else
+                    
                         <img src="{{ asset('uploads/listing_brand_photos/'.$listing_brand->listing_brand_photo) }}" alt="" class="w_200">
-                        @endif
+                    
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="">{{ CHANGE_PHOTO }}</label>
                     <div>
-                        <input type="file" name="listing_brand_photo">
+                        <input type="file" name="listing_brand_photo" accept=".jpg,.jpeg,.png,.webp">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="">{{ EXISTING_PHOTO }}</label>
+                    <div>
+                        @php
+    $brandListingAlisson = App\Models\Listing::where('listing_brand_id', $listing_brand->id)
+        ->where('listing_status', 'Active')
+        ->first();
+@endphp
+                        
+                       
+                        <img src="{{ asset('uploads/listing_brand_photos/'.$listing_brand->listing_brand_photo_png) }}" alt="" class="w_200">
+                      
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="">{{ CHANGE_PHOTO }} (Icone) PNG, WebP, GIF</label>
+                    <div>
+                        <input type="file" name="listing_brand_photo_png" accept=".jpg,.jpeg,.png,.webp">
                     </div>
                 </div>
             </div>

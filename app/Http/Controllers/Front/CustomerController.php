@@ -368,7 +368,7 @@ class CustomerController extends Controller {
         $listing = Listing::with('rListingBrand', 'rListingLocation')
                 ->where('user_id', $user_data->id)
                 ->get();
-        return view('front.customer_listing_view', compact('g_setting', 'listing', 'page_other_item'));
+        return view('front.customer_listing_view', compact('g_setting', 'listing', 'page_other_item','user_data'));
     }
 
     public function listing_view_detail($id) {

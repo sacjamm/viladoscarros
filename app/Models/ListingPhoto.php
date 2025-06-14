@@ -8,7 +8,10 @@ class ListingPhoto extends Model
 {
     protected $fillable = [
         'listing_id',
-        'photo'
+        'photo',
+        'photo_name_original',
+        'listing_image_alterada_admin',
+        'canal'
     ];
 
 }

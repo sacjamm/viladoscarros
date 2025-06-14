@@ -14,12 +14,12 @@
 </div>
 
 
-<div class="page-content pt_50 pb_60">
+<div class="page-content">
 	<div class="container">
 		<div class="row cart">
 
-			<div class="col-md-12">
-				<div class="reg-login-form">
+			<div class="col-md-4 offset-md-4">
+				<div class="reg-login-forms">
 					<div class="inner">
 
           
@@ -31,21 +31,24 @@
 							@csrf
 							<div class="form-group">
 								<label for="">{{ EMAIL_ADDRESS }}</label>
-								<input type="email" class="form-control" name="email"">
+                                                                <input type="email" class="form-control" name="email" placeholder="Informe o e-mail">
 							</div>
 							<div class="form-group">
 								<label for="">{{ PASSWORD }}</label>
-								<input type="password" class="form-control" name="password">
+								<input type="password" class="form-control" name="password" placeholder="Informe a senha">
 							</div>
 							@if($g_setting->google_recaptcha_status == 'Show')
 							<div class="form-group">
 								<div class="g-recaptcha" data-sitekey="{{ $g_setting->google_recaptcha_site_key }}"></div>
 							</div>
 							@endif
-							<button type="submit" class="btn btn-primary">{{ LOGIN }}</button>
-							<a href="{{ route('customer_forget_password') }}" class="link">{{ FORGET_PASSWORD }}</a>
+							<button type="submit" class="btn btn-dark btn-block btn-lg mt-3 mb-4">{{ LOGIN }}</button>
 							<div class="new-user">
-								{{ QUESTION_NEW_USER }} <a href="{{ route('customer_registration') }}" class="link">{{ REGISTER_NOW }}</a>
+								<a href="{{ route('customer_forget_password') }}" class="link mt-2 mb-4">{{ FORGET_PASSWORD }}</a>
+                                                                <p class="mt-3">
+                                                                    {{ QUESTION_NEW_USER }} <a href="{{ route('customer_registration') }}" class="link">{{ REGISTER_NOW }}</a>
+                                                                </p>
+                                                              	
 							</div>
 						</form>
 					</div>

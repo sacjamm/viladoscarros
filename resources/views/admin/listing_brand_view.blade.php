@@ -46,17 +46,9 @@
                         <tr>
                             <td>{{ $loop->iteration }}</td>
                             <td>
-                                @if(!empty($row->canal == 'dsautoestoque'))
-    <img src="{{ asset('images/'.$row->listing_brand_slug.'.png') }}" alt="" class="w_100">
-@endif
+                                
+    <img src="{{ asset('uploads/listing_brand_photos/'.$row->listing_brand_photo_png) }}" alt="" class="w_100">
 
-@if(!empty($row->canal == 'import'))
-    <img src="{{ asset('images/'.$row->listing_brand_slug.'.png') }}" alt="" class="w_100">
-@endif
-
-@if(!empty($row->canal == 'website'))
-    <img src="{{ asset('uploads/listing_brand_photos/'.$row->listing_brand_photo) }}" alt="" class="w_100">
-@endif
                             </td>
                             <td>{{ $row->listing_brand_name }}</td>
                             <td>{{ $row->listing_brand_slug }}</td>

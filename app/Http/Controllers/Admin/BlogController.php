@@ -38,31 +38,35 @@ class BlogController extends Controller {
             'post_slug' => 'unique:blogs',
             'content' => 'required',
             'post_content_short' => 'required',
-            /*'post_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',*/
+                /* 'post_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', */
                 ], [
             'post_title.required' => ERR_NAME_REQUIRED,
             'post_title.unique' => ERR_NAME_EXIST,
             'post_slug.unique' => ERR_SLUG_UNIQUE,
             'content.required' => ERR_CONTENT_REQUIRED,
             'post_content_short.required' => ERR_CONTENT_SHORT_REQUIRED,
-            /*'post_photo.required' => ERR_PHOTO_REQUIRED,
-            'post_photo.image' => ERR_PHOTO_IMAGE,
-            'post_photo.mimes' => ERR_PHOTO_JPG_PNG_GIF,
-            'post_photo.max' => ERR_PHOTO_MAX*/
+                /* 'post_photo.required' => ERR_PHOTO_REQUIRED,
+                  'post_photo.image' => ERR_PHOTO_IMAGE,
+                  'post_photo.mimes' => ERR_PHOTO_JPG_PNG_GIF,
+                  'post_photo.max' => ERR_PHOTO_MAX */
         ]);
 
         $statement = DB::select("SHOW TABLE STATUS LIKE 'blogs'");
         $ai_id = $statement[0]->Auto_increment;
 
+        $image = $request->file('post_photo');
         $rand_value = md5(mt_rand(11111111, 99999999));
         $ext = $request->file('post_photo')->extension();
-        $final_name = $rand_value . '.' . $ext;
-        $request->file('post_photo')->move(public_path('uploads/post_photos/'), $final_name);
+        $final_name = $rand_value . '.webp';
+        $destination = public_path('uploads/post_photos/' . $final_name);
+        //$request->file('post_photo')->move(public_path('uploads/post_photos/'), $final_name);
+
+        \App\Helpers\Helper::resizeAndConvertToWebp($image->getPathname(), $destination, 400, 250, 80);
 
         $blog = new Blog();
         $data = $request->only($blog->getFillable());
         $data['post_content'] = $request->input('content');
-        
+
         if (empty($data['post_slug'])) {
             unset($data['post_slug']);
             $data['post_slug'] = Str::slug($request->post_title);
@@ -99,13 +103,13 @@ class BlogController extends Controller {
         if ($request->hasFile('post_photo')) {
 
             $request->validate([
-                'post_photo' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+                'post_photo' => 'image|mimes:jpeg,png,jpg,gif|max:4048'
                     ], [
                 'post_photo.image' => ERR_PHOTO_IMAGE,
                 'post_photo.mimes' => ERR_PHOTO_JPG_PNG_GIF,
                 'post_photo.max' => ERR_PHOTO_MAX
             ]);
-            
+
             $currentBlogPath = public_path('uploads/post_photos/' . $blog->post_photo);
             if (file_exists($currentBlogPath)) {
                 unlink($currentBlogPath);
@@ -115,10 +119,14 @@ class BlogController extends Controller {
             }
 
             // Uploading the file
+            $image = $request->file('post_photo');
             $rand_value = md5(mt_rand(11111111, 99999999));
             $ext = $request->file('post_photo')->extension();
-            $final_name = $rand_value . '.' . $ext;
-            $request->file('post_photo')->move(public_path('uploads/post_photos/'), $final_name);
+            $final_name = $rand_value . '.webp';
+            $destination = public_path('uploads/post_photos/' . $final_name);
+            //$request->file('post_photo')->move(public_path('uploads/post_photos/'), $final_name);
+
+            \App\Helpers\Helper::resizeAndConvertToWebp($image->getPathname(), $destination, 400, 250, 80);
 
             unset($data['post_photo']);
             $data['post_photo'] = $final_name;
@@ -161,12 +169,12 @@ class BlogController extends Controller {
 
         $blog = Blog::findOrFail($id);
         $currentBlogPath = public_path('uploads/post_photos/' . $blog->post_photo);
-            if (file_exists($currentBlogPath)) {
-                unlink($currentBlogPath);
-            } else {
-                // O arquivo não existe, você pode logar uma mensagem ou tratar o erro conforme necessário
-                //Log::warning('O arquivo não foi encontrado: ' . $currentFaviconPath);
-            }
+        if (file_exists($currentBlogPath)) {
+            unlink($currentBlogPath);
+        } else {
+            // O arquivo não existe, você pode logar uma mensagem ou tratar o erro conforme necessário
+            //Log::warning('O arquivo não foi encontrado: ' . $currentFaviconPath);
+        }
         $blog->delete();
 
         Comment::where('blog_id', $blog->id)->delete();

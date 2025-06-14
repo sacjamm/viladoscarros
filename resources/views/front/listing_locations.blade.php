@@ -23,7 +23,7 @@
                     @if(!empty($row->listing_location_slug))
                     <div class="col-lg-3 col-md-6 col-sm-6 wow fadeInUp">
                         <div class="popular-city-item effect-item">
-                            <div class="photo image-effect">
+                            <div class="photo image-effect" style="border-bottom: 1px solid #ccc;">
                                 <img src="{{ asset('uploads/listing_location_photos/'.$row->listing_location_photo) }}" alt="">
                             </div>
                             <div class="text">

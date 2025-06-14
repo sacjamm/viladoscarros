@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Console\Command;
 use App\Models\Listing;
 use App\Models\ListingAmenity;
@@ -70,7 +71,7 @@ class RemoverVeiculosCommand extends Command {
             $this->error("Erro ao acessar a URL: " . $url);
             return;
         }
-         $xmlContent = preg_replace('/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)/', '&amp;', $xmlContent);
+        $xmlContent = preg_replace('/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)/', '&amp;', $xmlContent);
         try {
             $xml = new SimpleXMLElement($xmlContent, LIBXML_NOCDATA);
             return $xml;
@@ -100,7 +101,8 @@ class RemoverVeiculosCommand extends Command {
                         $this->error('O ID do veículo ' . $post_veiculo_id . ' não existe, pode deletar do banco de dados');
                         error_log('O ID do veículo ' . $post_veiculo_id . ' não existe, pode deletar do banco de dados');
                         $this->destroy($row->id);
-                        
+                        $this->removeCredere($row);
+
                         if (!empty($row->facebook_product_id)) {
                             // Remove o anúncio do Facebook usando o FacebookService
                             $result = $this->facebookService->deleteVehicle($row->facebook_product_id);
@@ -147,5 +149,20 @@ class RemoverVeiculosCommand extends Command {
             }
         }
         ListingPhoto::where('listing_id', $id)->delete();
+    }
+
+    private function removeCredere($estoque) {
+        $token = env('TOKEN_CREDERE');
+        $client = new \GuzzleHttp\Client();
+        if ($estoque->estoqueCredere_id > 0) {
+            $client->request('PUT', 'https://app.meucredere.com.br/api/v1/vehicles/1/remove_from_stock', [
+                'body' => '{"id":"' . $estoque->estoqueCredere_id . '","reason":"venda"}',
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token,
+                    'accept' => 'application/json',
+                    'content-type' => 'application/json',
+                ],
+            ]);
+        }
     }
 }

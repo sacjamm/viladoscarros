@@ -20,6 +20,7 @@
                     <tbody>
                         @if($customers)
                     @foreach($customers as $row)
+                    
                         <tr>
                             <td>{{ $row->UserID }}</td>
                             <td>
