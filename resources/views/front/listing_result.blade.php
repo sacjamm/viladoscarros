@@ -2,73 +2,36 @@
 
 @section('content')
 <style>
-    .listing{
-        margin-bottom:0!important;padding-bottom:0!important;padding-top:15px;
+    .listing-top{
+        margin-bottom:0!important;padding-bottom:0!important;padding-top:20px;
     }
     @media (max-width: 768px) {
+        .listing-top{
+        padding-top:80px !important;
+    }
         .listing{
-        padding-top:70px;
+        padding-top:20px !important;
     }
     }
 </style>
-<div class="listing">
+<div class="listing-top">
 	<div class="container">        
 		<div class="row">	
-                    <div class="col-md-12 mt-2">                                             
+                    <div class="col-md-12">                                             
                        <!-- Carousel -->
-<div class="owl-carousel owl-theme carousel-marcas" id="brandspng">
-    @foreach($listing_brands as $index => $row)
-    
-    @php
-                       
-                            $imgMarca = asset('images/'.$row->listing_brand_slug.'.png');
-                       
-                    @endphp
-                    
-                     <div class="item">
-        <form method="post" action="{{ route('busca_front_listing_result') }}">
-            @csrf
-            <input type="hidden" name="brand[]" value="{{ $row->id }}" />
-            <button type="submit"> 
-                <img src="{{ $imgMarca }}?id={{ time() }}" alt="{{ $imgMarca }}" title="{{ $row->listing_brand_slug }}">
-                <div class="clearfix clear"></div>
-            </button>
-    </form>
-    </div>
-                    
-    @endforeach
-   
-   
-  
-</div>
-
-<!-- Inicialização do Owl Carousel -->
-<script>
-  $(document).ready(function(){
-    $("#brandspng").owlCarousel({
-        items: 10,              // Exibe 1 item por vez
-        dots: false,            // Habilita a navegação por dots (pontos)
-        loop: true,            // Loop contínuo
-        autoplay: true,        // Autoplay ativado
-        autoplayTimeout: 5000, // Intervalo entre cada slide
-        nav: true,    
-        margin: 0,// Ativa as setas de navegação
-        navText: ["<", ">"],         // Define o símbolo das setas, você pode personalizar com ícones ou HTML
-        responsive: {
-            0: {
-                items: 4,            // Itens visíveis em telas menores
-            },
-            600: {
-                items: 4,            // Itens em tablets
-            },
-            1000: {
-                items: 10            // Itens em desktops
-            }
-        }
-    });
-    
-  });
-</script>                       
+<div id="brandspng" class="owl-carousel owl-theme carousel-marcas">
+                @foreach($listing_brands as $index => $row)
+                @php
+                                $imgMarca = asset('uploads/listing_brand_photos/'.$row->listing_brand_photo_png);
+                                $urlBusca = route('busca_front_listing_result', ['brand' => $row->id]);
+                                @endphp
+                <div class="item"> 
+                     <a href="{{ $urlBusca }}" title="{{ $row->listing_brand_name }}">
+                            <img loading="lazy" src="{{ $imgMarca }}" alt="{{ $imgMarca }}" title="{{ $row->listing_brand_name }}">
+                             </a>
+                </div>        
+                @endforeach  
+            </div>                    
                        
                     </div>
                     
@@ -77,28 +40,7 @@
 	</div>
 </div>
 
-<!--<div class="listing" style="margin-bottom:0!important;padding-bottom:0!important;">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9171096234708042"
-     crossorigin="anonymous"></script>
- Horizontal-Vila-Dos-Carros 
-<ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-9171096234708042"
-     data-ad-slot="1712465164"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-</script>
-            </div>
-        </div>
-    </div>
-</div>-->
-
-<div class="page-content" style="padding-top:10px!important;">   
+<div class="page-content" style="padding-top:0px!important;">   
     
     <div class="container">
         <div class="row listing pt_0 pb_0">
@@ -106,8 +48,7 @@
                 <div class="listing-filter">
                     <div class="lf-widget">
                     <h2 id="span-filter"><i class="fas fa-filter"></i> {{ FILTERS }}</h2>
-                    <button type="button" class="btn btn-danger" id="btn-filter" onclick="$('#searchFormId').slideToggle('slow');" style="cursor: pointer;"><i class="fa fa-filter"></i> FILTRAR</button> 
-                    <!--<button type="button" class="btn btn-danger" onclick="$('#searchFormId').slideToggle('slow');"><i class="fa fa-filter"></i>  {{ FILTERS }} </button>--> 
+                    <button type="button" class="btn btn-danger btn-block" id="btn-filter" onclick="$('#searchFormId').slideToggle('slow');" style="cursor: pointer;"><i class="fa fa-filter"></i> FILTRAR</button> 
                    
                     <h2 style="font-size: 14px !important;color:#333;border-bottom: 2px solid #333;padding: 10px 0 8px 5px;">Ordenar por</h2>
     <select name="orders" class="form-control" id="orders" style="height: calc(2.0em + .75rem + 2px) !important;
@@ -157,10 +98,8 @@
             @endif
         @endforeach
     </select>
-</div>
-                        
-                        
-                        
+</div>                
+                       
                         <div class="lf-widget">
     <h2 style="font-size: 14px !important;color:#333;border-bottom: 2px solid #333;padding: 10px 0 8px 5px;">Condição do veículo</h2>
    
@@ -192,19 +131,25 @@
     font-weight: 400 !important;
     line-height: 3.5 !important;border:1px solid #777 !important;" placeholder="{{ FIND_ANYTHING }}" value="{{ request()->has('text') ? request()->get('text') : '' }}">
                         </div>
-
-                        
-                      
-
                                                
                        <div class="lf-widget">
     @php
     $sort_cat = [];
-    if(request()->has('brand')){
-        foreach(request()->get('brand') as $cat){
-            array_push($sort_cat,(int)$cat);
+    $brands = request()->get('brand');
+    
+    if (!empty($brands)) {
+        // Transforma string em array, se necessário
+        $brands = is_array($brands) ? $brands : [$brands];
+//var_dump($brands);
+        foreach($brands as $cat){
+            array_push($sort_cat, (int) $cat);
         }
     }
+    //if(request()->has('brand')){
+        //foreach(request()->get('brand') as $cat){
+           // array_push($sort_cat,(int)$cat);
+        //}
+    //}
     @endphp
 
     <h2 style="font-size: 14px !important;color:#333;border-bottom: 2px solid #333;padding: 10px 0 8px 5px;" id="texto-marcas-modelos">{{ BRANDS }}</h2>
@@ -225,43 +170,20 @@
                     style="display: none;" 
                     data-brand-id="{{ $row->id }}" /> 
                     
+                    
                     @php
-                        $imgMarca = '';
-                        if($row->canal == 'dsautoestoque' || $row->canal == 'import') {
-                            $imgMarca = asset('images/'.$row->listing_brand_slug.'.png');
-                        } elseif ($row->canal == 'website') {
-                            $imgMarca = asset('uploads/listing_brand_photos/'.$row->listing_brand_photo);
-                        }
+                        $imgMarca = asset('uploads/listing_brand_photos/'.$row->listing_brand_photo_png);
                     @endphp
                     
                 <label class="form-check-label label-brand-check" for="cat{{ $index }}" onclick="show_modelos({{ $row->id }},'{{ $imgMarca }}','{{ $row->listing_brand_name }}');">
-                    @if($row->canal == 'dsautoestoque')
+                 
                         <img 
-                            src="{{ asset('images/'.$row->listing_brand_slug.'.png') }}" 
-                            alt="{{ asset('images/'.$row->listing_brand_slug.'.png') }}" 
+                            src="{{ $imgMarca }}" 
+                             alt="{{ $row->listing_brand_name }}" 
                             title="{{ $row->listing_brand_name }}" 
                             style="width: 74px; height: 70px; margin: 2px; border-radius: 5px; display: block;" 
                             class="brand-logo"
                         >
-                        @endif
-                         @if($row->canal == 'import')                         
-                        <img 
-                            src="{{ asset('images/'.$row->listing_brand_slug.'.png') }}" 
-                             alt="{{ asset('images/'.$row->listing_brand_slug.'.png') }}" 
-                            title="{{ $row->listing_brand_name }}" 
-                            style="width: 74px; height: 70px; margin: 2px; border-radius: 5px; display: block;" 
-                            class="brand-logo"
-                        >
-                        @endif
-                    @if($row->canal == 'website')
-                        <img 
-                            src="{{ asset('uploads/listing_brand_photos/'.$row->listing_brand_photo) }}" 
-                             alt="{{ asset('uploads/listing_brand_photos/'.$row->listing_brand_photo) }}" 
-                            title="{{ $row->listing_brand_name }}" 
-                            style="width: 74px; height: 70px; margin: 2px; border-radius: 5px; display: block;" 
-                            class="brand-logo"
-                        >
-                    @endif
                     <small style="display: block; font-size: 8px; text-align: center; font-weight: 300;"> {{ $row->listing_brand_name }} ({{ $contaBrands }})</small>
                 </label>
             </div>
@@ -946,8 +868,7 @@ style="margin-bottom:0px;border-left: none !important;border-right: none !import
                 <!--<span style="font-size:14px !important;font-weight: normal;" isd="quantidade_para_exibir"> Exibindo {{ $quantidade_para_exibir }} de {{ $total_registros }} Anúncios</span>-->
                     </div>
                     </div>
-                </div>
-                <div class="right-area">
+                
                     <div class="row d-none" id="loader-area">
                         <div class="col-12 text-center mt-5">
                             <div>
@@ -1069,7 +990,7 @@ function formatNumberWithThousandSeparator(number) {
 
     function loadAjaxListing(url){
         url = url.replace(/^http:\/\//i, 'https://');
-        console.log(url)
+     
         $('#content-area').html(loaderHtml);
         $.ajax({
             type: 'get',

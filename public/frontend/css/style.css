@@ -1174,7 +1174,7 @@ a:hover {
     background-position: center center;
     background-size: cover;
     background-repeat: no-repeat;
-    background-image: url('../../images/footer_bg.jpg');
+    /*background-image: url('../../images/footer_bg.jpg');*/
 }
 
 .footer-area:before {

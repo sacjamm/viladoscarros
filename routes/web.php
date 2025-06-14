@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SimulacaoController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\HomeAdvertisementController;
@@ -67,8 +68,114 @@ use App\Http\Controllers\Admin\VendasController;
 use App\Http\Controllers\Admin\BancosController;
 use App\Http\Controllers\Front\VendasFrontController;
 use App\Http\Controllers\Front\FollowController;
+use Illuminate\Support\Facades\Artisan;
+
+Route::get('/teste', [HomeController::class, 'teste']);
+
+Route::get('/convert-webp', function () {
+    $images = [
+        'Economia-e-Eficiencia',
+        'Melhores-Revendas',
+        'Variedade',
+        'Seguranca-Garantida',
+        'Suporte-Ativo-SAC',
+        'Qualidade',
+        'Garantia-Documentada',
+        'Conveniencia-Digital',
+        'Compromisso-Contratual'
+    ];
+
+    foreach ($images as $image) {
+        $srcPath = public_path("images/10-razoes/{$image}.png");
+        $destDir = public_path('images/10-razoes/');
+        $destPath = $destDir . "{$image}.webp";
+
+        if (!file_exists($destDir)) {
+            mkdir($destDir, 0755, true);
+        }
+
+        if (file_exists($srcPath) && !file_exists($destPath)) {
+            //$png = imagecreatefrompng($srcPath);
+            $data = file_get_contents($srcPath);
+            $png = @imagecreatefromstring($data);
+
+            if ($png) {
+                $trueColor = imagecreatetruecolor(imagesx($png), imagesy($png));
+                imagealphablending($trueColor, false);
+                imagesavealpha($trueColor, true);
+                imagecopy($trueColor, $png, 0, 0, 0, 0, imagesx($png), imagesy($png));
+
+                if (imagewebp($trueColor, $destPath, 80)) {
+                    echo "✅ Convertido: $destPath<br>";
+                } else {
+                    echo "❌ Erro ao salvar WebP: $destPath<br>";
+                }
+
+                imagedestroy($png);
+                imagedestroy($trueColor);
+            } else {
+                echo "❌ Erro ao carregar imagem: $srcPath<br>";
+            }
+        } else {
+            echo "Já existe ou não encontrado: $srcPath<br>";
+        }
+    }
+
+    return "Conversão finalizada.";
+});
+
+Route::get('/converter-logo-webp', function () {
+    // Busca o registro de configurações
+    $settings = \App\Models\GeneralSetting::where('id', 1)->first();
+    if (!$settings || !$settings->logo) {
+        return "❌ Logo não definida no banco de dados.";
+    }
+
+    $logoFilename = $settings->logo;
+
+    $srcPath = public_path("uploads/site_photos/{$logoFilename}");
+    $webpFilename = pathinfo($logoFilename, PATHINFO_FILENAME) . '.webp';
+    $destPath = public_path("uploads/site_photos/webp/{$webpFilename}");
+
+    if (!file_exists($srcPath)) {
+        return "❌ Logo original não encontrada: {$srcPath}";
+    }
+
+    if (file_exists($destPath)) {
+        return "⚠️ Logo já convertida: {$webpFilename}";
+    }
+
+    $data = file_get_contents($srcPath);
+    $image = @imagecreatefromstring($data);
+
+    if (!$image) {
+        return "❌ Erro ao carregar a imagem original.";
+    }
+
+    $trueColor = imagecreatetruecolor(imagesx($image), imagesy($image));
+    imagealphablending($trueColor, false);
+    imagesavealpha($trueColor, true);
+    imagecopy($trueColor, $image, 0, 0, 0, 0, imagesx($image), imagesy($image));
+
+    if (imagewebp($trueColor, $destPath, 90)) {
+        imagedestroy($image);
+        imagedestroy($trueColor);
+        return "✅ Logo convertida com sucesso: {$webpFilename}";
+    } else {
+        imagedestroy($image);
+        imagedestroy($trueColor);
+        return "❌ Erro ao salvar a imagem WebP.";
+    }
+});
 
 Route::get('/follow', [FollowController::class, 'follow']);
+Route::match(['get', 'post'], '/webhook/simulacao', [SimulacaoController::class, 'receber']);
+
+Route::post('/admin/limpar-cache', function () {
+    Artisan::call('optimize:clear');
+    return response()->json(['success' => true, 'message' => 'Cache limpo com sucesso!']);
+})->name('admin.limpar.cache')->middleware('auth');
+
 Route::group(['middleware' => ['XSS']], function () {
 
     Route::get('/teste-conexao', function () {
@@ -85,7 +192,9 @@ Route::group(['middleware' => ['XSS']], function () {
     /* Front End */
     /* --------------------------------------- */
     Route::get('/', [HomeController::class, 'index']);
+    //Route::get('/url', [HomeController::class, 'montarUrlComCnpjs']);
     Route::get('/home', [HomeController::class, 'home']);
+    Route::get('/ajax/banners', [HomeController::class, 'getBanners']);
 
     Route::get('/get-phone/{id}', [ListingControllerForFront::class, 'show_phone'])->name('get.phone');
     Route::get('/get-modelos/{id}', [ListingControllerForFront::class, 'get_modelos'])->name('get.modelos');
@@ -143,14 +252,14 @@ Route::group(['middleware' => ['XSS']], function () {
 
     Route::get('termos-e-condicoes', [TermController::class, 'index'])
             ->name('front_terms_and_conditions');
-    
- Route::get('/converter-imagens', [HomeController::class, 'converterImagensParaWebp']);
-    
+
+    Route::get('/converter-imagens', [HomeController::class, 'converterImagensParaWebp']);
+
     Route::get('politica-de-privacidade', [PrivacyController::class, 'index'])
             ->name('front_privacy_policy');
     Route::get('quero-vender', [VenderController::class, 'index'])
             ->name('front_quero_vender');
-       
+
     Route::post('upload-banner', [HomeController::class, 'uploadBanner'])->name('upload.banner');
 
     /* Route::get('listing-detail/{id}/{slug}', [ListingControllerForFront::class, 'detail'])
@@ -168,9 +277,15 @@ Route::group(['middleware' => ['XSS']], function () {
             ->name('front_listing_detail_report_listing');
 
     Route::get('veiculos/marcas/todos', [ListingControllerForFront::class, 'brand_all'])
+            ->name('front_listing_marcas_all');
+
+    Route::get('listing/brands/all', [ListingControllerForFront::class, 'brand_all'])
             ->name('front_listing_brand_all');
 
-    Route::get('veiculos/marcas/{slug}', [ListingControllerForFront::class, 'brand_detail'])
+    Route::get('veiculos/marca/{slug}', [ListingControllerForFront::class, 'brand_detail'])
+            ->name('front_listing_marca_detail');
+
+    Route::get('listing/brand/{slug}', [ListingControllerForFront::class, 'brand_detail'])
             ->name('front_listing_brand_detail');
 
     Route::get('veiculos/localizacao/todos', [ListingControllerForFront::class, 'location_all'])
@@ -187,8 +302,9 @@ Route::group(['middleware' => ['XSS']], function () {
 
     Route::get('listing-result', [ListingControllerForFront::class, 'listing_result'])
             ->name('front_listing_result');
-    
+
     //Route::get('/filtrar-carroceria', [ListingController::class, 'filtrarCarroceria']);
+
 
     Route::get('veiculos', [ListingControllerForFront::class, 'listing_result'])
             ->name('front_listing_result_veiculos');
@@ -197,7 +313,9 @@ Route::group(['middleware' => ['XSS']], function () {
 
     Route::post('search-listing', [ListingControllerForFront::class, 'search_listing'])
             ->name('search_front_listing_result');
-    
+
+    Route::get('busca', [ListingControllerForFront::class, 'search_listing'])
+            ->name('busca_front_listing_result');
     Route::post('busca', [ListingControllerForFront::class, 'search_listing'])
             ->name('busca_front_listing_result');
 
@@ -251,9 +369,9 @@ Route::group(['middleware' => ['XSS']], function () {
             ->name('customer_package');
     Route::get('customer/venda-de-veiculos', [CustomerControllerForFront::class, 'venda_de_veiculos'])
             ->name('customer_vendadeveiculos');
-    
+
     Route::get('admin/customer/cadastrovendas', [VendasController::class, 'index'])
-            ->name('admin_customer_vendadeveiculos'); 
+            ->name('admin_customer_vendadeveiculos');
 
     Route::get('customer/package/free/{id}', [CustomerControllerForFront::class, 'free_enroll'])
             ->name('customer_package_free_enroll');
@@ -338,7 +456,7 @@ Route::group(['middleware' => ['XSS']], function () {
 
     Route::get('customer/wishlist', [CustomerControllerForFront::class, 'wishlist'])
             ->name('customer_wishlist');
- 
+
     Route::get('customer/wishlist/delete/{id}', [CustomerControllerForFront::class, 'wishlist_delete'])
             ->name('customer_wishlist_delete');
 
@@ -427,17 +545,22 @@ Route::group(['middleware' => ['XSS']], function () {
 
     Route::post('admin/profile-change/update', [ProfileController::class, 'profile_update'])
             ->name('admin_profile_change_update');
-    
-    
+
     Route::get('admin/admin/view', [ProfileController::class, 'index'])
             ->name('admin_administrador_view');
     Route::get('admin/userbanco/view', [\App\Http\Controllers\Admin\UserbancoController::class, 'index'])
             ->name('admin_userbanco_view');
-    
-    
 
     Route::post('admin/profile-create/create', [ProfileController::class, 'profile_create'])
             ->name('admin_profile_create_create');
+
+    Route::post('admin/admin-status-update/{id}', [ProfileController::class, 'admin_status_update'])
+            ->name('admin_status_update');
+
+    Route::get('admin/admin-editar/{id}', [ProfileController::class, 'admin_editar'])
+            ->name('admin_editar');
+    Route::delete('admin/admin-excluir/{id}', [ProfileController::class, 'admin_excluir'])
+            ->name('admin_excluir');
 
     Route::get('admin/photo-change', [ProfileController::class, 'photo'])
             ->name('admin_photo_change');
@@ -938,45 +1061,43 @@ Route::group(['middleware' => ['XSS']], function () {
     /* --------------------------------------- */
     Route::get('admin/customer/view', [CustomerControllerForAdmin::class, 'index'])
             ->name('admin_customer_view');
-    
 
-    /*Novas páginas admin*/
+    /* Novas páginas admin */
     Route::get('admin/customer/configvendas', [BancosController::class, 'index'])
             ->name('admin_config_vendas');
     Route::post('admin/customer/configvendas', [BancosController::class, 'store'])
             ->name('admin_customer_config_vendas');
     Route::get('admin/customer_configvendas/delete/{id}', [BancosController::class, 'destroy'])
             ->name('admin_configvendas_delete');
-    
 
     Route::post('admin/customer/cadastrovendas', [VendasController::class, 'store'])
             ->name('admin_customer_cadastro_vendas');
-    
+
     Route::get('admin/customer/cadastrovendasajax/{id}', [VendasController::class, 'ajax'])
             ->name('admin_customer_cadastro_vendas_ajax');
     Route::post('admin/customer/cadastrovendasajax/{id}', [VendasController::class, 'ajax'])
             ->name('admin_customer_cadastro_vendas_ajax');
-    
+
     Route::post('customer/cadastrovendas', [VendasFrontController::class, 'store'])
             ->name('front_customer_cadastro_vendas');
     Route::get('customer/customer_vendas/delete/{id}', [VendasFrontController::class, 'destroy'])
             ->name('front_cadastrovendas_delete');
-    
+
     Route::post('import-vendas', [VendasFrontController::class, 'import'])->name('import.vendas');
     Route::post('admin-import-vendas', [VendasController::class, 'import'])->name('admin.import.vendas');
-    
+
     Route::get('admin/customer/cadastrovendas', [VendasController::class, 'index'])
             ->name('admin_cadastro_vendas');
     Route::get('admin/customer_cadastrovendas/delete/{id}', [VendasController::class, 'destroy'])
             ->name('admin_cadastrovendas_delete');
-    /*Novas páginas admin*/
-    
+    /* Novas páginas admin */
+
     Route::get('admin/customer/detail/{id}', [CustomerControllerForAdmin::class, 'detail'])
             ->name('admin_customer_detail');
-    
+
     Route::get('admin/customer/package/{id}', [CustomerControllerForAdmin::class, 'package'])
             ->name('admin_customer_package');
-    
+
     Route::get('admin/customer/acessar/{id}', [CustomerControllerForAdmin::class, 'acessar'])
             ->name('admin_customer_acessar');
     Route::get('admin/customer/editar/{id}', [CustomerControllerForAdmin::class, 'editar'])

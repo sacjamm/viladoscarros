@@ -75,6 +75,9 @@ class Listing extends Model {
         'listing_image_alterada_admin',
         'listing_uf',
         'versao_id',
+        'credere_model_id',
+        'estoqueCredere_id',
+        'listing_featured_photo_thumbnail',
     ];
 
     public function rListingBrand() {
@@ -89,7 +92,7 @@ class Listing extends Model {
     }
 
     public function listingAmenities() {
-        return $this->hasMany( ListingAmenity::class,);
+        return $this->hasMany( ListingAmenity::class);
         //return $this->hasMany(ListingAmenity::class, 'listing_id');
     }
     public function listingAdditionals() {
@@ -97,6 +100,6 @@ class Listing extends Model {
     }
 
     public function user() {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

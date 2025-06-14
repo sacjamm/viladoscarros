@@ -23,17 +23,15 @@
                 @endif
                 <div class="col-lg-3 col-md-6 col-sm-6 wow fadeInUp">
                     <div class="popular-city-item effect-item">
-                        <div class="photo image-effect">
+                        <div class="photo image-effect" style="border-bottom: 1px solid #ccc;">
                             @php
     $brandListingAlisson = App\Models\Listing::where('listing_brand_id', $row->id)
         ->where('listing_status', 'Active')
         ->first();
 @endphp
-                            @if($brandListingAlisson && $brandListingAlisson->canal == 'dsautoestoque')
-    <img src="{{ asset('images/'.$row->listing_brand_slug.'.jpg') }}" alt="">
-@else
+   
     <img src="{{ asset('uploads/listing_brand_photos/'.$row->listing_brand_photo) }}" alt="">
-@endif
+
 
                         </div>
                         <div class="text">
@@ -52,7 +50,7 @@ $qty += 1;
                             @endphp
                             <p>{{ $qty }} {{ ITEMS }}</p>
                         </div>
-                        <a href="{{ route('front_listing_brand_detail',$row->listing_brand_slug) }}"></a>
+                        <a href="{{ route('front_listing_marca_detail',$row->listing_brand_slug) }}"></a>
                     </div>
                 </div>
             @endforeach

@@ -766,7 +766,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe>
 <!-- End Google Tag Manager -->
 @endif
 <!--<div id="mySidepanel" class="sidepanel">
-    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    <a href="#" class="closebtn" onclick="closeNav()">&times;</a>
     <a href="#">About</a>
     <a href="#">Services</a>
     <a href="#">Clients</a>

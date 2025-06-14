@@ -13,12 +13,12 @@
 	</nav>
 </div>
 
-<div class="page-content pt_50 pb_60">
+<div class="page-content">
 	<div class="container">
 		<div class="row cart">
 
-			<div class="col-md-12">
-				<div class="reg-login-form">
+			<div class="col-md-4 offset-md-4">
+				<div class="reg-login-forms">
 					<div class="inner">
 
 						@php
@@ -30,19 +30,19 @@
 							<input type="hidden" name="current_email" value="{{ $email }}">
 							<div class="form-group">
 								<label for="">{{ NEW_PASSWORD }}</label>
-								<input type="password" class="form-control" name="new_password">
+								<input type="password" class="form-control" name="new_password" placeholder="Digite a nova senha">
 							</div>
 							<div class="form-group">
 								<label for="">{{ RETYPE_PASSWORD }}</label>
-								<input type="password" class="form-control" name="retype_password">
+								<input type="password" class="form-control" name="retype_password" placeholder="Confirme a nova senha">
 							</div>
 							@if($g_setting->google_recaptcha_status == 'Show')
 							<div class="form-group">
 								<div class="g-recaptcha" data-sitekey="{{ $g_setting->google_recaptcha_site_key }}"></div>
 							</div>
 							@endif
-							<button type="submit" class="btn btn-primary">{{ UPDATE }}</button>
-							<div class="new-user">
+							<button type="submit" class="btn btn-dark btn-block btn-lg mt-3 mb-4">{{ UPDATE }}</button>
+							<div class="new-user mt-4 mb-4">
 								<a href="{{ route('customer_login') }}">{{ BACK_TO_LOGIN_PAGE }}</a>
 							</div>
 						</form>

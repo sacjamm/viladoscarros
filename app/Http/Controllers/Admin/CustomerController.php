@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Listing;
 use App\Models\PackagePurchase;
 use App\Models\Review;
+use App\Models\Follower;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -259,6 +260,8 @@ class CustomerController extends Controller {
         $obj = User::findOrFail($id);
         $data = $request->only($obj->getFillable());
 
+        $slug = Str::slug($customer->name);
+        
         if (isset($data['photo'])) {
             /* $request->validate([
               'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
@@ -321,6 +324,7 @@ class CustomerController extends Controller {
         if (!empty($request->country)) {
             $data['country'] = ucfirst($request->country);
         }
+        $data['slug_user']=$slug;
         $obj->fill($data)->save();
         return redirect()->route('admin_customer_view')->with('success', SUCCESS_ACTION);
     }
@@ -347,6 +351,16 @@ class CustomerController extends Controller {
         $cnt2 = Review::where('agent_id', $id)->where('agent_type', 'Customer')->count();
         if ($cnt2 > 0) {
             Review::where('agent_id', $id)->delete();
+            //return redirect()->back()->with('error', ERR_ITEM_DELETE);
+        }
+        $usr = Follower::where('user_id', $id)->count();
+        if ($usr > 0) {
+            Follower::where('user_id', $id)->delete();
+            //return redirect()->back()->with('error', ERR_ITEM_DELETE);
+        }
+        $flw = Follower::where('follower_id', $id)->count();
+        if ($flw > 0) {
+            Follower::where('follower_id', $id)->delete();
             //return redirect()->back()->with('error', ERR_ITEM_DELETE);
         }
 

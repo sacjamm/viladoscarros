@@ -142,7 +142,7 @@ a.meanmenu-reveal {
     color: #FF2D55;
 }
 .main-nav {
-    /*background: #000;*/
+    background: #000;
     position: absolute;
     top: 0;
     left: 0;
@@ -171,7 +171,7 @@ a.meanmenu-reveal {
 }
 .main-nav nav .navbar-nav .nav-item a {
     font-weight: 600;
-    font-size: 14px;
+    font-size: 12px;
     text-transform: uppercase;
     color: #ffffff;
     padding-left: 0;
@@ -302,4 +302,8 @@ a.meanmenu-reveal {
     .main-nav {
         display: none !important;
     }
+}
+
+.main-nav nav .navbar-nav .nav-item .dropdown-menu li a:hover {
+    border-bottom: 1px solid #000;
 }

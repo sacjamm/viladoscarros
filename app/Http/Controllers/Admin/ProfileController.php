@@ -27,32 +27,51 @@ class ProfileController extends Controller {
     }
 
     public function profile_create(Request $request) {
-        $admin_data = Auth::user();
-        
-        if ($admin_data['id'] === 1 || $admin_data['id'] === 2 || $admin_data['id'] === 3 || $admin_data['id'] === 4) {
-            $obj = new Admin();
-            $data = $request->only($obj->getFillable());
+        if ($request->id) {
+            $admin = Admin::findOrFail($request->id);
             $request->validate([
                 'name' => 'required',
-                'email' => 'required|email',
-                'password' => 'required',
-                're_password' => 'required|same:password',
-                    ], [
-                'name.required' => ERR_NAME_REQUIRED,
-                'email.required' => ERR_EMAIL_REQUIRED,
-                'email.email' => ERR_EMAIL_INVALID,
-                'password.required' => ERR_PASSWORD_REQUIRED,
-                're_password.required' => ERR_RE_PASSWORD_REQUIRED,
-                're_password.same' => ERR_PASSWORDS_MATCH
+                'email' => 'required|email|unique:admins,email,' . $admin->id,
             ]);
-            $data['token'] = '';
-            $data['status'] = 'Active';
-            $data['password'] = Hash::make($request->password);
-            unset($data['re_password']);
-            $obj->fill($data)->save();
-            return redirect()->back()->with('success', SUCCESS_ACTION);
+            $admin->name = $request->name;
+            $admin->email = $request->email;
+            if ($request->password && $request->re_password) {
+                $request->validate([
+                    're_password' => 'same:password'
+                ]);
+                $admin->password = Hash::make($request->password);
+            }
+            $admin->save();
+            return redirect()->back()->with('success', 'Administrador atualizado com sucesso');
         } else {
-            return redirect()->back()->with('error', 'Você não tem permissão para cadastrar administradores');
+            $admin_data = Auth::user();
+
+            if ($admin_data['id'] === 1 || $admin_data['id'] === 2 || $admin_data['id'] === 3 || $admin_data['id'] === 4) {
+                $obj = new Admin();
+                $data = $request->only($obj->getFillable());
+                $request->validate([
+                    'name' => 'required',
+                    'email' => 'required|email|unique:admins,email',
+                    'password' => 'required',
+                    're_password' => 'required|same:password',
+                        ], [
+                    'name.required' => ERR_NAME_REQUIRED,
+                    'email.required' => ERR_EMAIL_REQUIRED,
+                    'email.email' => ERR_EMAIL_INVALID,
+                    'email.unique' => 'Este e-mail já está em uso.',
+                    'password.required' => ERR_PASSWORD_REQUIRED,
+                    're_password.required' => ERR_RE_PASSWORD_REQUIRED,
+                    're_password.same' => ERR_PASSWORDS_MATCH
+                ]);
+                $data['token'] = '';
+                $data['status'] = 'Active';
+                $data['password'] = Hash::make($request->password);
+                unset($data['re_password']);
+                $obj->fill($data)->save();
+                return redirect()->back()->with('success', SUCCESS_ACTION);
+            } else {
+                return redirect()->back()->with('error', 'Você não tem permissão para cadastrar administradores');
+            }
         }
     }
 
@@ -166,5 +185,33 @@ class ProfileController extends Controller {
         $data['banner'] = $final_name;
         $obj->fill($data)->save();
         return redirect()->back()->with('success', SUCCESS_ACTION);
+    }
+
+    public function admin_status_update(Request $request, $id) {
+        $admin = Admin::findOrFail($id);
+        $admin->status = $request->status;
+        $admin->save();
+        return response()->json(['message' => 'Status atualizado com sucesso']);
+    }
+
+    public function admin_editar($id) {
+        $admin = Admin::findOrFail($id);
+        return response()->json($admin);
+    }
+
+    public function admin_excluir($id) {
+        $current = Auth::user();
+
+        // Permita deletar apenas super-admins (ids 1-4) e bloqueie auto-remoção
+        if (!in_array($current->id, [1, 2, 3, 4])) {
+            return response()->json(['message' => 'Sem permissão'], 403);
+        }
+        if ($current->id == $id) {
+            return response()->json(['message' => 'Você não pode deletar a si mesmo'], 422);
+        }
+
+        $admin = Admin::findOrFail($id);
+        $admin->delete();                // hard delete; ver seção SoftDelete abaixo
+        return response()->json(['message' => 'Administrador deletado com sucesso']);
     }
 }

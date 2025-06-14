@@ -296,6 +296,11 @@ $g_setting = \App\Models\GeneralSetting::where('id',1)->first();
 
                     <!-- Nav Item - Alerts -->
                     <li class="nav-item dropdown no-arrow mx-1">
+                        <a class="btn btn-danger btn-sm mt-3" href="javascript:void(0)" id="limparCacheBtn">
+                            <i class="fa fa-eraser"></i> Limpar cache
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown no-arrow mx-1">
                         <a class="btn btn-info btn-sm mt-3" href="{{ url('/') }}" target="_blank">
                             {{ VISIT_WEBSITE }}
                         </a>
@@ -354,6 +359,32 @@ $g_setting = \App\Models\GeneralSetting::where('id',1)->first();
 </a>
 
 @include('admin.app_scripts_footer')
+<div id="mensagemCache" style="margin-top: 10px;"></div>
+
+<script>
+document.getElementById('limparCacheBtn').addEventListener('click', function () {
+    if (!confirm('Tem certeza que deseja limpar o cache do sistema?')) return;
+
+    fetch("{{ route('admin.limpar.cache') }}", {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+            "Accept": "application/json",
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+    location.reload();
+            
+        }
+    })
+    .catch(() => {
+        alert('Erro ao limpar o cache.');
+    });
+});
+</script>
 <script>
     function generateSlug(title_parameter,slug_parameter) {
         const title = document.getElementById(title_parameter).value;

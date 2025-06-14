@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Console\Command;
 use App\Models\User;
 use App\Models\Amenity;
@@ -23,6 +24,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
+use finfo;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class ImportLojas extends Command {
 
@@ -89,9 +93,9 @@ class ImportLojas extends Command {
             $this->error("Erro ao acessar a URL ou XML vazio: " . $url);
             return;
         }
-        
+
         $xmlContent = preg_replace('/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)/', '&amp;', $xmlContent);
-        
+
         try {
             libxml_use_internal_errors(true);
 
@@ -274,7 +278,7 @@ class ImportLojas extends Command {
     }
 
     private function prepareVehicleData($veiculo, $veiculo_id = 0, $title = '', $user_id = 0, $canal = 'dsautoestoque', $userData) {
-        $g_setting = GeneralSetting::where('id', 1)->first();
+
         $loja = $veiculo->loja;
         $cambioId = 0;
         if (isset($veiculo->cambio['id'])) {
@@ -289,11 +293,10 @@ class ImportLojas extends Command {
             $colorId = $veiculo->cor['id'];
         }
 
-
         $cidade = $loja->endereco->cidade;
-        /*if (isset($loja->endereco->cidade) && $loja->endereco->cidade === 'Sao Vicente') {
-            $cidade = 'Praia Grande';
-        }*/
+        /* if (isset($loja->endereco->cidade) && $loja->endereco->cidade === 'Sao Vicente') {
+          $cidade = 'Praia Grande';
+          } */
         $data_formatada_created = null;
         if (!empty($veiculo->cadastro)) {
             list($data, $hora) = explode(' ', $veiculo->cadastro);
@@ -330,10 +333,6 @@ class ImportLojas extends Command {
                 //$this->warning("Campo 'alteracao' inválido: '$alteracao' no veículo.");
             }
         }
-
-
-
-
 
         $listingData = [
             'listing_slug' => Str::slug($title),
@@ -396,7 +395,7 @@ class ImportLojas extends Command {
             'listing_locations' => isset($veiculo->loja) ? json_encode((array) $veiculo->loja) : null,
             'listing_additional_features' => isset($veiculo->opcionais) ? json_encode($veiculo->opcionais) : null,
             'vehicleMake' => $veiculo->marca,
-            'vehicleModel' => $veiculo->modelo,
+            'vehicleModel' => trim($veiculo->modelo),
             'vehicleModelYear' => $veiculo->anomodelo,
             'vehicleManufactureYear' => $veiculo->anofabricacao,
             'vehicleValue' => $this->extractVehiclePrice($veiculo->preco ?? 0),
@@ -420,12 +419,12 @@ class ImportLojas extends Command {
 
         $Local = ListingLocation::where('id', $listingData['listing_location_id'])->first();
         if (isset($Local) && $Local->listing_location_slug == 'praia-grande') {
-            $address = trim('Av. Pres. Kennedy, 3113 - Aviação, '.$cidade.' - SP, 11702-480');
-        }else
+            $address = trim('Av. Pres. Kennedy, 3113 - Aviação, ' . $cidade . ' - SP, 11702-480');
+        } else
         if (isset($Local) && $Local->listing_location_slug == 'santos') {
-            $address = trim('Av. Washington Luis, 238, '.$cidade.', SP, 11050-201');
-        }else{
-            $address = $loja->endereco->logradouro.', '.$loja->endereco->numero.', '.$cidade.' - '.$loja->endereco->uf.', '.$loja->endereco->cep;
+            $address = trim('Av. Washington Luis, 238, ' . $cidade . ', SP, 11050-201');
+        } else {
+            $address = $loja->endereco->logradouro . ', ' . $loja->endereco->numero . ', ' . $cidade . ' - ' . $loja->endereco->uf . ', ' . $loja->endereco->cep;
         }
 
         $listingData['listing_address'] = $address;
@@ -436,15 +435,27 @@ class ImportLojas extends Command {
         }
         $enderecoUrl = urlencode($address);
 
+        /* $apiKey = 'AIzaSyBJxA9UBypN4xmq_j7xNiR_MQm6tMVlNVk';
+
+          $listingData['listing_map'] = '<iframe
+          src="https://www.google.com/maps/embed/v1/place?key=' . $apiKey . '&q=' . urlencode($enderecoUrl) . '"
+          width="100%"
+          height="200"
+          style="border:0;"
+          allowfullscreen
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+          </iframe>'; */
+
         $listingData['listing_map'] = '<iframe 
-            src="https://www.google.com/maps?q=' . $enderecoUrl . '&output=embed" 
-            width="100%" 
-            height="200" 
-            style="border:0;" 
-            allowfullscreen="" 
-            loading="lazy" 
-            referrerpolicy="no-referrer-when-downgrade">
-        </iframe>';
+          src="https://www.google.com/maps?q=' . urlencode($enderecoUrl) . '&output=embed"
+          width="100%"
+          height="200"
+          style="border:0;"
+          allowfullscreen
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+          </iframe>';
 
         $listing = new Listing();
 
@@ -457,7 +468,10 @@ class ImportLojas extends Command {
         }
         $this->processAmenities($veiculo->acessorios ?? [], $listingId);
         $this->processAdditionalFeatures($veiculo->opcionais ?? [], $listingId);
-        $this->processPhotosFull($veiculo->fotos ?? [], $listingId, $canal);
+        //$this->processPhotosFull($veiculo->fotos ?? [], $listingId, $canal);
+        $this->processPhotosFullWeb($veiculo->fotos ?? [], $listingId, $canal);
+        /* $cnpj = $this->limpaCPF_CNPJ($loja->cnpj);
+          $this->processPhotosFullWebP($veiculo->fotos->foto ?? [], $listingId, $canal, $cnpj); */
 
         return $listingData;
     }
@@ -465,14 +479,14 @@ class ImportLojas extends Command {
     private function processLocations($veiculo, $canal = 'dsautoestoque') {
         $loja = $veiculo->loja;
 
-        /*if ((isset($loja->endereco->cidade) && ($loja->endereco->cidade == 'Sao Vicente' || $loja->endereco->cidade == 'São Vicente'))) {
-            $cidade = 'Praia Grande';
-        } elseif ((isset($loja->endereco->cep) && $loja->endereco->cep == '11726-500') &&
-                (!isset($loja->endereco->cidade) || trim($loja->endereco->cidade) == '')) {
-            $cidade = 'Praia Grande';
-        } else {*/
-            $cidade = $loja->endereco->cidade;
-       /* }*/
+        /* if ((isset($loja->endereco->cidade) && ($loja->endereco->cidade == 'Sao Vicente' || $loja->endereco->cidade == 'São Vicente'))) {
+          $cidade = 'Praia Grande';
+          } elseif ((isset($loja->endereco->cep) && $loja->endereco->cep == '11726-500') &&
+          (!isset($loja->endereco->cidade) || trim($loja->endereco->cidade) == '')) {
+          $cidade = 'Praia Grande';
+          } else { */
+        $cidade = $loja->endereco->cidade;
+        /* } */
         $name = $cidade;
         $slug = Str::slug($name);
 
@@ -509,8 +523,6 @@ class ImportLojas extends Command {
             'listing_brand_name' => strtoupper($name),
             'listing_brand_slug' => $slug,
             'canal' => $canal,
-            'listing_brand_photo' => 'images/' . $slug . '.jpg',
-            'listing_brand_photo_png' => 'images/' . $slug . '.png',
             'seo_title' => strtoupper($name),
             'created_at' => now(),
             'updated_at' => now(),
@@ -654,6 +666,67 @@ class ImportLojas extends Command {
         }
     }
 
+    private function processPhotosFullWeb($fotos, $listingId, $canal = 'dsautoestoque') {
+        if (!empty($fotos) && isset($fotos->foto)) {
+            $fotosImg = (array) $fotos->foto;
+
+            foreach ($fotosImg as $index => $img) {
+                $cleaned_url = $this->trata_img($img);
+                $img_destaque = $this->trata_img($fotosImg[0]);
+
+                $name_file_destaque = $this->extract_name_file($img_destaque);
+                $name_file_media = $this->extract_name_file($cleaned_url);
+
+                $ArquivoDestaque = $name_file_destaque . '.webp';
+                $ArquivoMedia = $name_file_media . '.webp';
+
+                // Verifica se imagem já existe no banco e pasta
+                $exists = $this->isPhotoExists($ArquivoMedia, $listingId, $canal, $name_file_media);
+                $outputPath = public_path('uploads/listing_featured_photos/') . $ArquivoDestaque;
+                $outputThumbPath = public_path('uploads/listing_featured_photos_thumbs/') . 'thumb_' . $ArquivoDestaque;
+                $outputMediaPath = public_path('uploads/listing_photos/') . $ArquivoMedia;
+
+                if ($index === 0) {
+                    // Atualiza imagem destaque apenas se ainda não foi salva
+                    if (!$exists && file_exists($outputPath) && file_exists($outputThumbPath)) {
+                        DB::update('UPDATE listings SET listing_featured_photo = ?, listing_image_alterada_admin = ? WHERE id = ?', [$ArquivoDestaque, 0, $listingId]);
+                    } elseif (!$exists) {
+                        DB::update('UPDATE listings SET listing_featured_photo = ? WHERE id = ? AND listing_image_alterada_admin = ?', [$ArquivoDestaque, $listingId, 0]);
+                    }
+                }
+
+                // Só processa a imagem se ainda não existe no disco e banco
+                if (!$exists || !file_exists($outputPath) || !file_exists($outputThumbPath) || !file_exists($outputMediaPath)) {
+                    $this->savePhoto($ArquivoMedia, $listingId, $canal, $name_file_media, $img_destaque, $cleaned_url, $ArquivoDestaque, $ArquivoMedia);
+                }
+
+                /* if (!$this->isPhotoExists($ArquivoMedia, $listingId, $canal, $name_file_media)) {
+                  DB::update('UPDATE listings SET listing_featured_photo = ?, listing_image_alterada_admin = ? WHERE id = ?', [$ArquivoDestaque, 0, $listingId]);
+                  } else {
+                  DB::update('UPDATE listings SET listing_featured_photo = ? WHERE id = ? AND listing_image_alterada_admin = ?', [$ArquivoDestaque, $listingId, 0]);
+                  }
+                  $this->savePhoto($ArquivoMedia, $listingId, $canal, $name_file_media, $img_destaque, $cleaned_url, $ArquivoDestaque, $ArquivoMedia); */
+            }
+        } else {
+            $img_destaque = 'images/sem-veiculo.jpg';
+            DB::update('UPDATE listings SET listing_featured_photo = ?, listing_image_alterada_admin = ? WHERE id = ?', [$img_destaque, 0, $listingId]);
+        }
+    }
+
+    private function extract_name_file($img) {
+        $parsed_url = parse_url($img);
+
+        // Pega o caminho do arquivo
+        $path = isset($parsed_url['path']) ? $parsed_url['path'] : '';
+
+        // Extrai apenas o nome do arquivo com extensão
+        $filename = basename($path); // Ex: BZA-7E21_01.jpg
+        // Remove a extensão
+        $name_without_extension = pathinfo($filename, PATHINFO_FILENAME); // Ex: BZA-7E21_01
+
+        return $name_without_extension;
+    }
+
     private function trata_img($img) {
         $image_url = $img;
         $parsed_url = parse_url($image_url);
@@ -680,30 +753,180 @@ class ImportLojas extends Command {
         return $cleaned_url;
     }
 
-    private function savePhoto($media, $listingId, $canal = 'dsautoestoque') {
-        $existingPhoto = ListingPhoto::where('listing_id', $listingId)
-                ->where('photo', $media)
+    private function savePhoto($media, $listingId, $canal = 'dsautoestoque', $name = '', $img_destaque = '', $cleaned_url = '', $ArquivoDestaque = '', $ArquivoMedia = '') {
+        $outputPath = public_path('uploads/listing_featured_photos/');
+        $outputThumbPath = public_path('uploads/listing_featured_photos_thumbs/');
+        $outputPathC = public_path('uploads/listing_photos/');
+        $ArquivoThumb = 'thumb_' . $ArquivoDestaque;
+
+        // Criação das pastas se não existirem
+        foreach ([$outputPath, $outputThumbPath, $outputPathC] as $path) {
+            if (!file_exists($path)) {
+                mkdir($path, 0755, true);
+            }
+        }
+
+        $photo = ListingPhoto::where('listing_id', $listingId)
+                ->where('photo_name_original', $name)
+                ->where('canal', $canal)
                 ->first();
 
-        if (!$existingPhoto) {
+        $caminhoDestaque = $outputPath . $ArquivoDestaque;
+        $caminhoThumb = $outputThumbPath . $ArquivoThumb;
+        $caminhoMedia = $outputPathC . $ArquivoMedia;
+
+        // Evita reprocessamento se os arquivos já existem fisicamente e no banco
+        if (
+                file_exists($caminhoDestaque) &&
+                file_exists($caminhoThumb) &&
+                file_exists($caminhoMedia) &&
+                $photo
+        ) {
+            return; // já existe tudo, então não precisa salvar ou sobrescrever
+        }
+
+        if (!$photo) {
             $photo = new ListingPhoto();
             $photo->listing_id = $listingId;
-            $photo->photo = $media;
             $photo->created_at = now();
-            $photo->updated_at = now();
             $photo->listing_image_alterada_admin = 0;
             $photo->canal = $canal;
-            $photo->save();
         }
+
+        // Processa imagens apenas se os arquivos ainda não existem
+        if (!file_exists($caminhoDestaque)) {
+            \App\Helpers\Helper::convertUrlImageToWebp($img_destaque, $caminhoDestaque);
+        }
+
+        if (!file_exists($caminhoThumb)) {
+            \App\Helpers\Helper::resizeAndConvertToWebp($caminhoDestaque, $caminhoThumb, 400, 300, 80);
+        }
+
+        if (!file_exists($caminhoMedia)) {
+            \App\Helpers\Helper::convertUrlImageToWebp($cleaned_url, $caminhoMedia);
+        }
+
+        $photo->photo = $ArquivoMedia;
+        if (!empty($name)) {
+            $photo->photo_name_original = $name;
+        }
+        $photo->updated_at = now();
+        $photo->save();
+        /* if ($photo) {
+          // Apaga imagem principal antiga
+          if (!empty($photo->photo)) {
+          $oldPhotoPath = public_path($photo->photo);
+          if (file_exists($oldPhotoPath)) {
+          unlink($oldPhotoPath);
+          }
+          }
+          // Apaga imagem thumb antiga
+          $oldThumbPath = $outputThumbPath . 'thumb_' . basename($photo->photo);
+          if (file_exists($oldThumbPath)) {
+          unlink($oldThumbPath);
+          }
+          // Apaga imagem de mídia (media)
+          $oldMediaPath = $outputPathC . basename($photo->photo);
+          if (file_exists($oldMediaPath)) {
+          unlink($oldMediaPath);
+          }
+          } else {
+
+          // Criar nova entrada
+          $photo = new ListingPhoto();
+          $photo->listing_id = $listingId;
+          $photo->created_at = now();
+          $photo->listing_image_alterada_admin = 0;
+          $photo->canal = $canal;
+          } */
+        // Processar novas imagens
+        /* \App\Helpers\Helper::convertUrlImageToWebp($img_destaque, $outputPath . $ArquivoDestaque);
+          \App\Helpers\Helper::resizeAndConvertToWebp($outputPath . $ArquivoDestaque, $outputThumbPath . $ArquivoThumb, 400, 300, 80);
+          \App\Helpers\Helper::convertUrlImageToWebp($cleaned_url, $outputPathC . $ArquivoMedia);
+
+          $photo->photo = $ArquivoMedia;
+          if (!empty($name)) {
+          $photo->photo_name_original = $name;
+          }
+          $photo->updated_at = now();
+          $photo->save();
+
+          if (!empty($name)) {
+          $photo->photo_name_original = $name;
+          }
+          $photo->save(); */
     }
 
-    private function isPhotoExists($media, $listingId, $canal = 'dsautoestoque') {
-        $result = ListingPhoto::where('listing_id', $listingId)->where('canal', $canal)->where('photo', $media)->first();
+    private function isPhotoExists($media, $listingId, $canal = 'dsautoestoque', $name = '') {
+        $result = ListingPhoto::where('listing_id', $listingId)->where('canal', $canal)->where('photo', $media)->where('photo_name_original', $name)->first();
         if ($result) {
             return $result->id;
         } else {
             return 0;
         }
+    }
+
+    private function savePhotoss($media, $listingId, $canal = 'dsautoestoque', $name = '', $img_destaque = '', $cleaned_url = '', $ArquivoDestaque = '', $ArquivoMedia = '') {
+        $outputPath = public_path('uploads/listing_featured_photos/');
+        $outputThumbPath = public_path('uploads/listing_featured_photos_thumbs/');
+        $outputPathC = public_path('uploads/listing_photos/');
+        $ArquivoThumb = 'thumb_' . $ArquivoDestaque;
+
+        foreach ([$outputPath, $outputThumbPath, $outputPathC] as $path) {
+            if (!file_exists($path)) {
+                mkdir($path, 0755, true);
+            }
+        }
+
+        $photo = ListingPhoto::where('listing_id', $listingId)
+                ->where('photo_name_original', $name)
+                ->where('canal', $canal)
+                ->first();
+
+        if ($photo) {
+            // Remove antiga
+            foreach ([$photo->photo, 'thumb_' . basename($photo->photo)] as $file) {
+                foreach ([$outputPath, $outputThumbPath, $outputPathC] as $dir) {
+                    $filePath = $dir . $file;
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+                }
+            }
+        } else {
+            $photo = new ListingPhoto();
+            $photo->listing_id = $listingId;
+            $photo->created_at = now();
+            $photo->listing_image_alterada_admin = 0;
+            $photo->canal = $canal;
+        }
+
+        // 📸 INICIA INTERVENTION
+        $manager = new ImageManager(new Driver());
+
+        try {
+            // IMAGEM DESTAQUE - CONVERTE PARA .webp
+            $image = $manager->read($img_destaque);
+            $image->resize(800, null)->toWebp(80)->save($outputPath . $ArquivoDestaque);
+
+            // THUMB DA IMAGEM DESTAQUE
+            $imageThumb = $manager->read($img_destaque);
+            $imageThumb->resize(400, 300)->toWebp(80)->save($outputThumbPath . $ArquivoThumb);
+
+            // OUTRAS IMAGENS
+            $mediaImage = $manager->read($cleaned_url);
+            $mediaImage->resize(800, null)->toWebp(80)->save($outputPathC . $ArquivoMedia);
+        } catch (\Exception $e) {
+            // ⚠️ ERRO DE DOWNLOAD OU PROCESSAMENTO
+            \Log::error('Erro ao processar imagem: ' . $e->getMessage());
+            return;
+        }
+
+        // SALVAR NO BANCO
+        $photo->photo = $ArquivoMedia;
+        $photo->photo_name_original = $name;
+        $photo->updated_at = now();
+        $photo->save();
     }
 
     private function extractVehiclePrice($preco) {
@@ -835,7 +1058,7 @@ class ImportLojas extends Command {
 
     private function registerOrUpdateUser($userData, $user_id = false) {
         $token = hash('sha256', time());
-$slug = Str::slug($userData['name']);
+        $slug = Str::slug($userData['name']);
         // Tenta encontrar um usuário pelo CNPJ ou outro identificador
         $user = User::where('cnpj', $userData['cnpj'])->first();
 
@@ -907,7 +1130,7 @@ $slug = Str::slug($userData['name']);
         $modelo = $this->verificaString($veiculo['modelo']);
         $versao = $this->verificaString($veiculo['versao']);
         $anomodelo = $this->verificaString($veiculo['anomodelo']);
-        return trim(preg_replace('/\s+/', ' ', "$marca $modelo $versao $anomodelo"));
+        return trim(preg_replace('/\s+/', ' ', "$marca $modelo $versao"));
     }
 
     function verificaString($valor) {

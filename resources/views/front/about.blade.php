@@ -36,41 +36,34 @@
 			
               
                     <div class="col-md-12">
-                 
+                 @php
+                    $imagens = [
+                        'Economia-e-Eficiencia',
+                        'Melhores-Revendas',
+                        'Variedade',
+                        'Seguranca-Garantida',
+                        'Suporte-Ativo-SAC',
+                        'Qualidade',
+                        'Garantia-Documentada',
+                        'Conveniencia-Digital',
+                        'Compromisso-Contratual'
+                    ];
+                @endphp
                         <!-- Carousel -->
 <div class="owl-carousel owl-theme" id="10-razoes">
-    <div class="item">
-        <img src="{{ asset('images/10-razoes/Economia-e-Eficiencia.png') }}" alt="Economia-e-Eficiencia.png">
- 
-    </div>
-    <div class="item">
-        <img src="{{ asset('images/10-razoes/Melhores-Revendas.png') }}" alt="Melhores-Revendas.png">
-
-    </div>
-    <div class="item">
-        <img src="{{ asset('images/10-razoes/Variedade.png') }}" alt="Variedade.png">
-   
-    </div>
-    <div class="item">
-      
-        <img src="{{ asset('images/10-razoes/Seguranca-Garantida.png') }}" alt="Seguranca-Garantida.png">
-   
-    </div>
-    <div class="item">
-        <img src="{{ asset('images/10-razoes/Suporte-Ativo-SAC.png') }}" alt="Suporte-Ativo-SAC.png">
-    </div>
-    <div class="item">
-       <img src="{{ asset('images/10-razoes/Qualidade.png') }}" alt="Qualidade.png">
-    </div>
-    <div class="item">
-      <img src="{{ asset('images/10-razoes/Garantia-Documentada.png') }}" alt="Garantia-Documentada.png">
-    </div>
-    <div class="item">
-       <img src="{{ asset('images/10-razoes/Conveniencia-Digital.png') }}" alt="Conveniencia-Digital.png">
-   </div>
-    <div class="item">
-       <img src="{{ asset('images/10-razoes/Compromisso-Contratual.png') }}" alt="Compromisso-Contratual.png">
-    </div>
+    @foreach ($imagens as $nomeImagem)
+            @php
+                $original = 'images/10-razoes/' . $nomeImagem . '.png';
+                $optimized = 'images/10-razoes/' . $nomeImagem . '.webp';
+                $imgPath = file_exists(public_path($optimized)) ? asset($optimized) : asset($original);
+            @endphp
+            <div class="item">
+                <a href="{{ route('front_about') }}">
+                    <img src="{{ $imgPath }}" alt="{{ $nomeImagem }}" 
+                         title="{{ $nomeImagem }}" width="277" height="415" loading="lazy">
+                </a>
+            </div>
+        @endforeach
   
 </div>
 

@@ -47,7 +47,7 @@
         }
         .swiper-wrapper {
             display: flex;
-            align-items: center;
+            /*align-items: center;*/
         }
         .swiper-slide {
             display: flex;
@@ -75,8 +75,7 @@
         @media (max-width: 768px) {
              .swiper-container {
                 padding-top: 50px;
-                width:100%;
-                height: 300px;              
+                width:100%;    
             overflow: hidden; 
             }
             .swiper-slide {
@@ -108,29 +107,13 @@
                                 @if(!$listing_photos->isEmpty()) 
                                 
                                  @foreach($listing_photos as $rowPhotos)
-                                <div class="swiper-slide">                                     
+                                <div class="swiper-slide">                                   
                                     
-                                    @if($rowPhotos->canal == 'dsautoestoque')                                       
-                                        @if ($rowPhotos->listing_image_alterada_admin == 1)
                                             <a href="{{ asset('uploads/listing_photos/' . $rowPhotos->photo) }}" data-fancybox="gallery" class="magnific">
                                             <img src="{{ asset('uploads/listing_photos/' . $rowPhotos->photo) }}" 
                                                  alt="{{ asset('uploads/listing_photos/' . $rowPhotos->photo) }}" 
-                                                 title="{{ asset('uploads/listing_photos/' . $rowPhotos->photo) }}" 
-                                                 style="width: 100%; height: auto;">
+                                                 title="{{ asset('uploads/listing_photos/' . $rowPhotos->photo) }}">
                                             </a>
-                                        @else
-                                            <a href="{{ $rowPhotos->photo }}" data-fancybox="gallery" class="magnific">
-                                            <img src="{{ $rowPhotos->photo }}" alt="{{ $rowPhotos->photo }}" title="{{ $rowPhotos->photo }}" style="width: 100%; height: auto;">
-                                            </a>
-                                        @endif                                        
-                                            
-                                    @else
-                                    <a href="{{ asset('uploads/listing_photos/'.$rowPhotos->photo) }}" data-fancybox="gallery" class="magnific">
-                                        <img src="{{ asset('uploads/listing_photos/'.$rowPhotos->photo) }}" 
-                                             alt="{{ asset('uploads/listing_photos/'.$rowPhotos->photo) }}" 
-                                             title="{{ asset('uploads/listing_photos/'.$rowPhotos->photo) }}" style="width: 100%; height: auto;">
-                        </a>
-                                    @endif
                     </div>
                                 @endforeach
                                 
@@ -145,19 +128,13 @@
                                 @if ($detail->listing_featured_photo == 'images/sem-veiculo.jpg')
                                 <img src="{{ asset('images/sem-veiculo.jpg') }}" alt="{{ asset('images/sem-veiculo.jpg') }}" title="Sem imagem">
             @else
-                @if ($detail->listing_image_alterada_admin == 1)
+            
                     <a href="{{ asset('uploads/listing_featured_photos/' . $detail->listing_featured_photo) }}" data-fancybox="gallery" class="magnific">
-                                            <img src="{{ asset('uploads/listing_featured_photos/' . $detail->listing_featured_photo) }}" 
-                                                 alt="{{ asset('uploads/listing_featured_photos/' . $detail->listing_featured_photo) }}" 
-                                                 title="{{ $detail->listing_name }} - {{ asset('uploads/listing_featured_photos/' . $detail->listing_featured_photo) }}"
+                                            <img src="{{ asset('uploads/listing_featured_photos_thumbs/thumb_' . $detail->listing_featured_photo) }}" 
+                                                 alt="{{ asset('uploads/listing_featured_photos_thumbs/thumb_' . $detail->listing_featured_photo) }}" 
+                                                 title="{{ $detail->listing_name }} - {{ asset('uploads/listing_featured_photos_thumbs/thumb_' . $detail->listing_featured_photo) }}"
                                                  style="width: 100%; height: auto;">
-                                            </a>
-                @else
-                   <a href="{{ $detail->listing_featured_photo }}" data-fancybox="gallery" class="magnific">
-                                                <img src="{{ $detail->listing_featured_photo }}" alt="{{ $detail->listing_featured_photo }}" 
-                                                 title="{{ $detail->listing_name }} - {{ $detail->listing_featured_photo }}" style="width: 100%; height: auto;">
-                                                </a>
-                @endif
+                                            </a>                
             @endif
             
                                         
@@ -183,24 +160,7 @@
                 slidesPerView: 1,
                 spaceBetween: 0,
                 
-                breakpoints: {
-                    1024: {
-                        slidesPerView: 1,
-                        spaceBetween: 0,
-                    },
-                    600: {
-                        slidesPerView: 1,
-                        spaceBetween: 0,
-                    },
-                    480: {
-                        slidesPerView: 1,
-                        spaceBetween: 0,
-                    },
-                    320: {
-                        slidesPerView: 1,
-                        spaceBetween: 0,
-                    }
-                }
+                
             });
         });
             </script>
@@ -213,6 +173,10 @@
                 loop: true,        
                 slidesPerView: 2,
                 spaceBetween: 0,
+                autoplay: {
+                    delay: 3000, // tempo entre slides (em milissegundos)
+                    disableOnInteraction: false // continua após interação do usuário
+                },
                 navigation: {
                     nextEl: '.swiper-button-next',
                     prevEl: '.swiper-button-prev',
@@ -251,25 +215,7 @@
             document.addEventListener('DOMContentLoaded', function() {
             var swiper = new Swiper('.swiper-container', {   
                 slidesPerView: 1,
-                spaceBetween: 0,                
-                breakpoints: {
-                    1024: {
-                        slidesPerView: 1,
-                        spaceBetween: 0,
-                    },
-                    600: {
-                        slidesPerView: 1,
-                        spaceBetween: 0,
-                    },
-                    480: {
-                        slidesPerView: 1,
-                        spaceBetween: 0,
-                    },
-                    320: {
-                        slidesPerView: 1,
-                        spaceBetween: 0,
-                    }
-                }
+                spaceBetween: 0
             });
         });
             </script>
@@ -315,7 +261,7 @@
                                                                                            
                                             <div class="row">
                                             <div class="col-12 col-sm-12 col-md-12 col-lg-12 pb-4">
-                                                <div style="padding-left:40px;padding-right:40px;">
+                                                <div style="padding-left:20px;padding-right:20px;">
                                                     <h1 style="font-weight: 700;font-size:34px;">
                                                         {{ $detail->rListingBrand->listing_brand_name }} 
                                                         <strong style="font-size:30px;color:red;">
@@ -331,7 +277,7 @@
                                             </div>
                                             <div class="row">
                                             <div class="col-6 col-sm-6 col-md-6 col-lg-6">
-                                            <ul style="list-style:none;list-style-type: none;padding-left:40px;padding-right:10px;" class="ulDetail">
+                                            <ul style="list-style:none;list-style-type: none;padding-left:20px;padding-right:10px;" class="ulDetail">
                                                 <li>
                                                     <div style="display:block;">  
                                                         <p style="display:block !important;width:100%;">
@@ -475,7 +421,7 @@
                                     </div> 
                                         <div class="row">
                                             <div class="col-12 col-sm-12 col-md-12 col-lg-12 pb-5">
-					<div style="padding-left:40px;padding-right:40px;">					                                       
+					<div style="padding-left:20px;padding-right:20px;">					                                       
                                         <p>
   <a class="btn btn-outline-dark btn-block btn-lg" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
     clique para ver a descrição
@@ -627,15 +573,14 @@
     </div>
   </div>
 </div>                                   
-                                        
-                                        
-                                                
+                                                  
 				</div>
 			</div>
 			<div class="col-lg-4 col-md-12 col-sm-12 div_sidebar">
                             <div class="listing-sidebar" style="margin-left:4px;">
  
-                                    <div class="ls-widget" style=" box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);padding:10px;" id="div_mensagem"> 
+                                    <div class="ls-widget" style="border-top:1px solid #ccc;background-color: rgba(255, 255, 255, 0.5); 
+                                         box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);padding:10px;" id="div_mensagem"> 
                                         <h2 style="font-weight: 700;">
                                                   R$ {{ number_format($detail->listing_price,0,'','.') }} 
                                                 <a class="btn btn-danger float-right btn-sm d-none d-sm-block" onclick="simular_parcelas();">
@@ -681,7 +626,7 @@
                                                 <textarea name="message" class="form-custom h-100" cols="30" rows="10" required>Olá, tenho interesse no veículo. Por favor entre em contato.</textarea>
                                             </div>
                                         </div>
-                                        @if($g_setting->google_recaptcha_status == 'Show')
+                                        @if($g_setting->google_recaptcha_status == 'Shows')
                                             <div class="form-group">
                                                 <div class="g-recaptcha" data-sitekey="{{ $g_setting->google_recaptcha_site_key }}"></div>
                                             </div>
@@ -722,7 +667,7 @@
                                 @else
                                     @php $type = "user"; @endphp
                                 @endif
-                                    <h3><a href="{{ route('front_listing_agent_detail',[$type,$agent_detail->id]) }}">{{ $agent_detail->name }}</a></h3>
+                                    <h3><a href="{{ route('front_listing_agent_detail',[$type,$agent_detail->slug_user ?? $agent_detail->id]) }}">{{ $agent_detail->name }}</a></h3>
 								<!--<h4>{{ POSTED_ON }} {{ \Carbon\Carbon::parse($detail->created_at)->format('d M, Y') }}</h4>-->
 							</div>
 						</div>
@@ -781,7 +726,7 @@
 						</div>
 						@endif
 
-						<a href="{{ route('front_listing_agent_detail',[$type,$agent_detail->id]) }}" 
+						<a href="{{ route('front_listing_agent_detail',[$type,$agent_detail->slug_user ?? $agent_detail->id]) }}" 
                                                    class="btn btn-outline-dark btn-block">Ver estoque do vendedor  </a>
 					</div>
 

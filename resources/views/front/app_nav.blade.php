@@ -17,21 +17,33 @@ $page_listing_brand_item = \App\Models\PageListingBrandItem::where('id',1)->firs
 	<!-- Menu For Mobile Device -->
 	<div class="mobile-nav">
 		<a href="{{ url('/') }}" class="logo" 
-                             title="Vila dos Carros - O seu shopping de automóveis">
-			<img src="{{ asset('uploads/site_photos/'.$g_settings->logo) }}" alt="{{ asset('uploads/site_photos/'.$g_settings->logo) }}" 
-                             title="Vila dos Carros - O seu shopping de automóveis" width="150" height="20">
+                             title="Vila dos Carros - O seu shopping de automóveis" alt="Vila dos Carros - O seu shopping de automóveis">			                        
+<picture>
+    <source srcset="{{ asset('uploads/site_photos/webp/' . pathinfo($g_settings->logo, PATHINFO_FILENAME) . '.webp') }}" type="image/webp">
+    <img src="{{ asset('uploads/site_photos/webp/' . pathinfo($g_settings->logo, PATHINFO_FILENAME) . '.webp') }}" 
+         alt="Logo Vila dos Carros" 
+         title="Vila dos Carros - O seu shopping de automóveis" 
+         height="20">
+</picture>
+                        
+                    
 		</a>
 	</div>
        
 	<!-- Menu For Desktop Device -->
 	<div class="main-nav">
 		<div class="container container-nav">
-			<nav class="navbar navbar-expand-md navbar-light">
+		
+			<nav class="navbar navbar-expand-md">
 				<a class="navbar-brand" href="{{ url('/') }}" 
-                             title="Vila dos Carros - O seu shopping de automóveis">
-					<img src="{{ asset('uploads/site_photos/'.$g_settings->logo) }}" 
-                                             alt="{{ asset('uploads/site_photos/'.$g_settings->logo) }}" 
-                             title="Vila dos Carros - O seu shopping de automóveis" width="270" height="30">
+                             title="Vila dos Carros - O seu shopping de automóveis" alt="Vila dos Carros - O seu shopping de automóveis">                                        
+    <picture>
+    <source srcset="{{ asset('uploads/site_photos/webp/' . pathinfo($g_settings->logo, PATHINFO_FILENAME) . '.webp') }}" type="image/webp">
+    <img src="{{ asset('uploads/site_photos/webp/' . pathinfo($g_settings->logo, PATHINFO_FILENAME) . '.webp') }}" 
+         alt="Logo Vila dos Carros" 
+         title="Vila dos Carros - O seu shopping de automóveis" 
+         height="25">
+</picture>
 				</a>
 				<div class="collapse navbar-collapse mean-menu" id="navbarSupportedContent">
 					<ul class="navbar-nav {{ $g_settings->layout_direction == 'ltr' ? 'ml-auto' : 'mr-auto' }}">
@@ -62,7 +74,7 @@ $page_listing_brand_item = \App\Models\PageListingBrandItem::where('id',1)->firs
 
                         @if($page_listing_location_item->status == 'Show' || $page_listing_brand_item->status == 'Show' || (!$dynamic_pages->isEmpty()))
 						<li class="nav-item">
-							<a href="javascript:void;" class="nav-link dropdown-toggle" 
+							<a href="#" class="nav-link dropdown-toggle" 
                              title="{{ MENU_PAGES }}">{{ MENU_PAGES }}</a>
 							<ul class="dropdown-menu">
                                                             @if($page_about_item->status == 'Show')
@@ -83,7 +95,7 @@ $page_listing_brand_item = \App\Models\PageListingBrandItem::where('id',1)->firs
                                 @if($page_listing_brand_item->status == 'Show')
 								<li class="nav-item">
 									<a href="{{ route('front_listing_brand_all') }}" class="nav-link" 
-                             title="{{ MENU_BRAND }}">{{ MENU_BRAND }}</a>
+                             title="{{ MENU_BRAND }}">Marcas</a>
 								</li>
                                 @endif
                                 

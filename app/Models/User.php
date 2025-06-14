@@ -33,7 +33,11 @@ class User extends Authenticatable {
         'banner',
         'password',
         'token',
-        'status'
+        'status',
+        'tipo_user',
+        'slug_user',
+        'cnpj_credere',
+        'loja_credere',
     ];
 
     public function rPurchasePackage() {

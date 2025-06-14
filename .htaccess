@@ -22,6 +22,9 @@
 </IfModule>
 Header always unset X-Frame-Options
 
+<IfModule mod_mime.c>
+    AddType image/webp .webp
+</IfModule>
 
 # php -- BEGIN cPanel-generated handler, do not edit
 # Set the “ea-php83” package as the default “PHP” programming language.
@@ -35,27 +38,27 @@ Header always unset X-Frame-Options
 # To make changes to this file, use the cPanel MultiPHP INI Editor (Home >> Software >> MultiPHP INI Editor)
 # For more information, read our documentation (https://go.cpanel.net/EA4ModifyINI)
 <IfModule php8_module>
-   php_flag display_errors Off
-   php_value max_execution_time 300
-   php_value max_input_time 600
+   php_flag display_errors On
+   php_value max_execution_time 180
+   php_value max_input_time 180
    php_value max_input_vars 1000
-   php_value memory_limit 3048M
-   php_value post_max_size 3048M
+   php_value memory_limit 2048M
+   php_value post_max_size 2048M
    php_value session.gc_maxlifetime 1440
-   php_value session.save_path "/var/cpanel/php/sessions/ea-php83"
-   php_value upload_max_filesize 3048M
+   php_value session.save_path "/tmp"
+   php_value upload_max_filesize 2048M
    php_flag zlib.output_compression Off
 </IfModule>
 <IfModule lsapi_module>
-   php_flag display_errors Off
+   php_flag display_errors On
    php_value max_execution_time 300
    php_value max_input_time 600
    php_value max_input_vars 1000
-   php_value memory_limit 3048M
-   php_value post_max_size 3048M
+   php_value memory_limit 2048M
+   php_value post_max_size 2048M
    php_value session.gc_maxlifetime 1440
-   php_value session.save_path "/var/cpanel/php/sessions/ea-php83"
-   php_value upload_max_filesize 3048M
+   php_value session.save_path "/tmp"
+   php_value upload_max_filesize 2048M
    php_flag zlib.output_compression Off
 </IfModule>
 # END cPanel-generated php ini directives, do not edit

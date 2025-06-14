@@ -47,7 +47,7 @@ class ListingController extends Controller {
         $z_flow_vehicleSellerDocument = env('Z_FLOW_VEHICLESELLERDOCUMENT', '13467746000151');
 
         $g_setting = GeneralSetting::where('id', 1)->first();
-        $detail = Listing::with('rListingLocation', 'rListingBrand')
+        $detail = Listing::with('rListingLocation', 'rListingBrand','user')
                 ->where('id', $id)
                 ->where('listing_slug', $slug)
                 ->first();
@@ -282,9 +282,50 @@ class ListingController extends Controller {
         return view('front.listing_location_detail', compact('g_setting', 'listing_location_detail', 'listing_items', 'listing_location_page_data', 'user_data'));
     }
 
-    public function agent_detail($type, $id) {
+    public function agent_detail($type, $identifier) {
         $current_auth_user_id = 0;
         $user_data = null;
+
+        if (Auth::user()) {
+            $current_auth_user_id = Auth::user()->id;
+            $user_data = Auth::user();
+        }
+
+        $g_setting = GeneralSetting::where('id', 1)->first();
+
+        $agent_detail = null;
+        $all_listings = collect();
+
+        if ($type === 'admin') {
+            $agent_detail = is_numeric($identifier) ? Admin::find($identifier) : Admin::find($identifier);
+
+            if ($agent_detail) {
+                $all_listings = Listing::with('rListingBrand', 'rListingLocation','user')
+                        ->where('admin_id', $agent_detail->id)
+                        ->where('listing_status', 'Active')
+                        ->get();
+            }
+        } else {
+            $agent_detail = is_numeric($identifier) ? User::find($identifier) : User::where('slug_user', $identifier)->first();
+
+            if ($agent_detail) {
+                $all_listings = Listing::with('rListingBrand', 'rListingLocation','user')
+                        ->where('user_id', $agent_detail->id)
+                        ->where('listing_status', 'Active')
+                        ->get();
+            }
+        }
+
+        if (!$agent_detail) {
+            abort(404, 'Agente não encontrado.');
+        }
+
+        $total_listings = $all_listings->count() ?? 0;
+
+        return view('front.listing_agent_detail', compact(
+                        'g_setting', 'agent_detail', 'all_listings', 'user_data', 'current_auth_user_id', 'total_listings'
+                ));
+
         /* echo $id;die;
           if (is_numeric($id)) {
           $agent_detail = User::where('id', $id)->first();
@@ -293,30 +334,25 @@ class ListingController extends Controller {
           }
           } */
 
-        if (Auth::user()) {
-            $current_auth_user_id = Auth::user()->id;
-            $user_data = Auth::user();
-        }
-        $g_setting = GeneralSetting::where('id', 1)->first();
-        $total_listings = 0;
-        if ($type == 'admin') {
-            $agent_detail = Admin::where('id', $id)->first();
-            $all_listings = Listing::with('rListingBrand', 'rListingLocation')
-                    ->where('admin_id', $id)
-                    ->where('listing_status', 'Active')
-                    ->get();
-        } else {
-            $agent_detail = User::where('id', $id)->orWhere('slug_user', $id)->first();
-            $all_listings = Listing::with('rListingBrand', 'rListingLocation')
-                    ->where('user_id', $agent_detail->id)
-                    ->where('listing_status', 'Active')
-                    ->get();
-        }
-        $total_listings = count($all_listings);
-        /* echo '<pre>';
-          var_dump($agent_detail);
-          echo '</pre>';die; */
-        return view('front.listing_agent_detail', compact('g_setting', 'agent_detail', 'all_listings', 'user_data', 'current_auth_user_id', 'total_listings'));
+
+        /* $g_setting = GeneralSetting::where('id', 1)->first();
+          $total_listings = 0;
+          if ($type == 'admin') {
+          $agent_detail = Admin::where('id', $id)->first();
+          $all_listings = Listing::with('rListingBrand', 'rListingLocation')
+          ->where('admin_id', $id)
+          ->where('listing_status', 'Active')
+          ->get();
+          } else {
+          $agent_detail = User::where('id', $id)->orWhere('slug_user', $id)->first();
+          $all_listings = Listing::with('rListingBrand', 'rListingLocation')
+          ->where('user_id', $agent_detail->id)
+          ->where('listing_status', 'Active')
+          ->get();
+          }
+          $total_listings = count($all_listings);
+
+          return view('front.listing_agent_detail', compact('g_setting', 'agent_detail', 'all_listings', 'user_data', 'current_auth_user_id', 'total_listings')); */
     }
 
     public function listing_result(Request $request) {
@@ -1179,13 +1215,13 @@ class ListingController extends Controller {
             'email' => 'required|email',
             'message' => 'required'
                 ], [
-            'name.required' => ERR_NAME_RREQUIRED,
+            'name.required' => 'Nome é obrigatório',
             'email.required' => ERR_EMAIL_REQUIRED,
             'email.email' => ERR_EMAIL_INVALID,
             'message.required' => ERR_MESSAGE_REQUIRED
         ]);
 
-        if ($g_setting->google_recaptcha_status == 'Show') {
+        if ($g_setting->google_recaptcha_status == 'Shows') {
             $request->validate([
                 'g-recaptcha-response' => 'required'
                     ], [
@@ -1193,6 +1229,9 @@ class ListingController extends Controller {
             ]);
         }
 
+        $listing_result = Listing::with('rListingLocation', 'rListingBrand')
+                ->where('id', $request->id)
+                ->first();
         $listing_name = $request->listing_name;
         $listing_url = '<a href="' . route('front_listing_detail', [$request->id, $request->listing_slug]) . '">' . route('front_listing_detail', [$request->id, $request->listing_slug]) . '</a>';
         $agent_name = $request->agent_name;
@@ -1203,7 +1242,7 @@ class ListingController extends Controller {
             'name' => $request->name,
             'mobile_phone' => $request->phone
         ];
-        $this->enviarLead($dados);
+        //$this->enviarLead($dados);
         // Send Email
         $email_template_data = EmailTemplate::where('id', 9)->first();
         $subject = $email_template_data->et_subject;
@@ -1217,7 +1256,25 @@ class ListingController extends Controller {
         $message = str_replace('[[phone]]', $request->phone, $message);
         $message = str_replace('[[message]]', $request->message, $message);
 
-        Mail::to($request->agent_email)->send(new ListingPageMessage($subject, $message));
+        //Mail::to($request->agent_email)->send(new ListingPageMessage($subject, $message));
+
+        $agent_detail = User::where('id', $listing_result->user_id)->first();
+
+        $assunto = 'Contato do site: Vila dos carros - ' . $agent_name . ' - ' . $listing_name . ' - ' . $listing_url;
+        $mensagem = "
+                DADOS DO LEAD <br><br>
+            Nome: {$request->name} <br>
+                Telefone: {$request->phone} <br>
+                E-mail: {$request->email} <br>
+                        Mensagem: {$message} <br>
+                    <br>
+        ";
+
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= "From: Vila dos Carros <viladoscarrosmkt@gmail.com>" . "\r\n";
+
+        $email_enviado2 = mail('viladoscarros@contact2sale.com', $assunto, $mensagem);
 
         return redirect()->back()->with('success', SUCCESS_MESSAGE_SENT);
     }

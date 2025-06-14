@@ -57,6 +57,12 @@
                                 </td>
                             </tr>
                             <tr>
+                                <td>CNPJ Credere</td>
+                                <td>
+                                    <input type="tel" name="cnpj_credere" class="form-control cnpj" value="{{ preg_replace('/[^\d]/', '', trim($customer_detail->cnpj_credere)) }}" maxlength="14" />
+                                </td>
+                            </tr>
+                            <tr>
                                 <td>{{ PHONE }}</td>
                                 <td>
                                     <input type="tel" name="phone" class="form-control phone" value="{{ preg_replace('/[^\d]/', '', trim($customer_detail->phone)) }}" />

@@ -1,4 +1,116 @@
-<script src="{{ asset('frontend/js/custom.js') }}"></script>
+<!--<script src="{{ asset('frontend/js/custom.js') }}"></script>-->
+<script>
+(function ($) {
+
+    "use strict";
+
+    // Scroll-Top
+    $(".scroll-top").hide();
+    $(window).on("scroll", function () {
+        if ($(this).scrollTop() > 300) {
+            $(".scroll-top").fadeIn();
+        } else {
+            $(".scroll-top").fadeOut();
+        }
+    });
+    $(".scroll-top").on("click", function () {
+        $("html, body").animate({
+            scrollTop: 0,
+        }, 700)
+    });
+@if($route != null)
+    $(document).ready(function () {
+
+        if ($('#timepicker').length) {  // Verifica se a tabela existe
+            $("#timepicker").timepicker();
+        }
+
+        if ($('#example').length) {  // Verifica se a tabela existe
+            $('#example').DataTable();
+        }
+        if ($('.select2').length) {
+            $('.select2').select2({
+                theme: "bootstrap"
+            });
+        }
+
+        $('.paypal').hide();
+        $('.stripe').hide();
+        $('.bank').hide();
+        $('.cash-on-delivery').hide();
+
+        $('#paymentMethodChange').on('change', function () {
+
+            if ($('#paymentMethodChange').val() == 'PayPal')
+            {
+                $('.paypal').show();
+                $('.stripe').hide();
+                $('.bank').hide();
+                $('.cash-on-delivery').hide();
+            } else if ($('#paymentMethodChange').val() == 'Stripe')
+            {
+                $('.paypal').hide();
+                $('.stripe').show();
+                $('.bank').hide();
+                $('.cash-on-delivery').hide();
+            } else if ($('#paymentMethodChange').val() == 'Bank')
+            {
+                $('.paypal').hide();
+                $('.stripe').hide();
+                $('.bank').show();
+                $('.cash-on-delivery').hide();
+            } else if ($('#paymentMethodChange').val() == 'Cash On Delivery')
+            {
+                $('.paypal').hide();
+                $('.stripe').hide();
+                $('.bank').hide();
+                $('.cash-on-delivery').show();
+            } else if ($('#paymentMethodChange').val() == '')
+            {
+                $('.paypal').hide();
+                $('.stripe').hide();
+                $('.bank').hide();
+                $('.cash-on-delivery').hide();
+            }
+
+        });
+    });
+        @endif
+
+
+    // Wow Active
+    new WOW().init();
+
+    // Mean Menu
+
+    jQuery('.mean-menu').meanmenu({
+        meanScreenWidth: "991"
+    });
+
+    // Video Popup
+    $('.video-button').magnificPopup({
+        type: 'iframe',
+        gallery: {
+            enabled: true
+        }
+    });
+
+    $('.magnific').magnificPopup({
+        type: 'image',
+        gallery: {
+            enabled: true
+        }
+    });
+@if($route != null)
+    $('.my').iconpicker();
+ @endif
+    if ($(window).width() > 767) {
+       
+    }
+
+})(jQuery);
+
+</script>
 <script src="{{ asset('js/jquery.maskMoney.min.js') }}"></script>
 <script src="{{ asset('js/jquery.maskedinput.min.js') }}"></script>
 <script>
@@ -11,10 +123,16 @@ $(document).ready(function(){
     $g_settings = \App\Models\GeneralSetting::where('id',1)->first();
 @endphp
 @if($g_settings->layout_direction == 'ltr')
+@if($route != 'front_listing_detail' || $route != null)
+    <script src="{{ asset('frontend/js/ltr_1.js') }}"></script>
+@else
     <script src="{{ asset('frontend/js/ltr.js') }}"></script>
 @endif
+@endif
 @if($g_settings->layout_direction == 'rtl')
+@if($route != 'front_listing_detail' || $route != null)
     <script src="{{ asset('frontend/js/rtl.js') }}"></script>
+@endif
 @endif
 
 

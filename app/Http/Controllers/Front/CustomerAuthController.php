@@ -142,22 +142,27 @@ class CustomerAuthController extends Controller {
             ]);
         }
         unset($request->re_password);
-        $cnpj = PT_limpaCPF_CNPJ($request->cnpj);
-        $data['cnpj'] = mask($cnpj, '##.###.###/####-##');
+        
+        $slug = Str::slug($request->name);
+        $data['slug_user']=$slug;
+        
+        $cnpj = $this->PT_limpaCPF_CNPJ($request->cnpj);
+        $data['cnpj'] = $this->mask($cnpj, '##.###.###/####-##');
         $data['password'] = Hash::make($request->password);
         $data['token'] = $token;
         $data['status'] = 'Pending';
+        
 
         $obj->fill($data)->save();
 
         // Send Email
-        /* $et_data = EmailTemplate::where('id', 6)->first();
+         $et_data = EmailTemplate::where('id', 6)->first();
           $subject = $et_data->et_subject;
           $message = $et_data->et_content;
           $verification_link = url('customer/registration/verify/' . $token . '/' . $request->email);
           $message = str_replace('[[verification_link]]', $verification_link, $message);
 
-          Mail::to($request->email)->send(new RegistrationEmailToCustomer($subject, $message)); */
+          Mail::to($request->email)->send(new RegistrationEmailToCustomer($subject, $message)); 
 
         return redirect()->back()->with('success', SUCCESS_REGISTRATION_EMAIL_SEND);
     }
@@ -279,5 +284,24 @@ class CustomerAuthController extends Controller {
         $data['token'] = '';
         User::where('email', $request->current_email)->update($data);
         return redirect()->route('customer_login')->with('success', SUCCESS_RESET_PASSWORD);
+    }
+    public function PT_limpaCPF_CNPJ($valor) {
+        // Remove espaços em branco e caracteres indesejados usando uma expressão regular
+        return preg_replace('/[^\d]/', '', trim($valor));
+    }
+    
+    public function mask($val, $mask) {
+        $maskared = '';
+        $k = 0;
+        for ($i = 0; $i <= strlen($mask) - 1; $i++) {
+            if ($mask[$i] == '#') {
+                if (isset($val[$k]))
+                    $maskared .= $val[$k++];
+            } else {
+                if (isset($mask[$i]))
+                    $maskared .= $mask[$i];
+            }
+        }
+        return $maskared;
     }
 }
